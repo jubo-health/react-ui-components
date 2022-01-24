@@ -1,4 +1,3 @@
-import TestComponent from "./TestComponent";
-import TestButton from "./TestButton";
+import Divider from './Divider';
 
-export { TestComponent, TestButton };
+export { Divider };
