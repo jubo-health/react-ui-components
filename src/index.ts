@@ -1,3 +1,3 @@
-import Divider from './Divider';
+import Bar from './Bar';
 
-export { Divider };
+export { Bar };

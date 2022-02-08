@@ -1,4 +1,4 @@
-# jubo-components
+# react-ui-components
 
 This library is aim to support the development of [jubo.health](https://www.jubo-health.com/) products, so pull requests and issues would probably be push aside.
 
