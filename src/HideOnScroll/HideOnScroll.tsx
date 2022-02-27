@@ -1,16 +1,16 @@
 import React from 'react';
 import clsx from 'clsx';
 
-export type HideOnScrollProps = {
+export interface HideOnScrollProps extends React.ComponentProps<'div'> {
   children?: React.ReactNode;
   className?: string;
-};
+}
 
 const HideOnScroll = React.forwardRef<HTMLDivElement, HideOnScrollProps>(
   (props: HideOnScrollProps, ref) => {
-    const { children, className } = props;
+    const { children, className, ...rest } = props;
     return (
-      <div ref={ref} className={clsx('bg-gray-400', className)}>
+      <div ref={ref} className={clsx('bg-gray-400', className)} {...rest}>
         {children}
       </div>
     );

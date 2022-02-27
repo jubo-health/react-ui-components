@@ -6,9 +6,8 @@ module.exports = {
         top: 'top',
       },
       animation: {
-        'zjit-hacked': 'scroll-out 1s',
-        'scroll-out':
-          '1.0001s linear 0s infinite normal both paused scroll-out',
+        'slide-in': '75ms ease-in-out 0s 1 reverse forwards running scroll-out',
+        'scroll-out': '1s linear -1s 1 reverse forwards paused scroll-out',
       },
       keyframes: {
         'scroll-out': {

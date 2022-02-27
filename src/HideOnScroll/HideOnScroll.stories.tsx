@@ -13,37 +13,42 @@ export const PlayGround: Story<HideOnScrollProps> = (args) => {
   const lastY = React.useRef(0);
   const ref = React.useRef<HTMLDivElement>(null);
   const anchor = React.useRef(0);
+  const [showAnimation, setShowAnimation] = React.useState(false);
 
   return (
     <div
       className="h-80 relative overflow-auto"
       onScroll={(e: React.UIEvent<HTMLElement>) => {
         if (ref.current) {
-          const hide = ref.current.style.animationDelay === '-1s';
+          const fullHide = ref.current.style.animationDelay === '0s';
+          const fullShow = ref.current.style.animationDelay === '-1s';
           const dy = e.currentTarget.scrollTop - lastY.current;
           const dh = e.currentTarget.scrollTop - anchor.current;
 
-          if ((!hide && dy > 0) || dh < ref.current.offsetHeight) {
+          if ((!fullHide && dy > 0) || dh < ref.current.offsetHeight) {
             const moveOutPropotion = dh / ref.current.offsetHeight;
             if (moveOutPropotion < 1) {
-              ref.current.style.animationDelay = `-${moveOutPropotion}s`;
+              ref.current.style.animationDelay = `${
+                moveOutPropotion <= 0 ? -1 : moveOutPropotion - 1
+              }s`;
             } else {
-              ref.current.style.animationDelay = '-1s';
+              ref.current.style.animationDelay = '0s';
               anchor.current = 0;
             }
           }
           if (dy < 0) {
-            const show = ref.current.style.animationDelay === '0s';
-            if (show) {
+            if (fullShow) {
               anchor.current = e.currentTarget.scrollTop;
-            }
-            if (dy < -80) {
+            } else if (fullHide && dy < -60) {
+              setShowAnimation(true);
               ref.current.style.animationDelay = '0s';
             }
           } else if (
+            fullHide &&
             e.currentTarget.scrollTop + e.currentTarget.clientHeight ===
-            e.currentTarget.scrollHeight
+              e.currentTarget.scrollHeight
           ) {
+            setShowAnimation(true);
             ref.current.style.animationDelay = '0s';
           }
           lastY.current = e.currentTarget.scrollTop;
@@ -52,7 +57,15 @@ export const PlayGround: Story<HideOnScrollProps> = (args) => {
     >
       {/* <div className="sticky top-0 h-8 bg-white z-10">fixed</div> */}
       <HideOnScroll
-        className={clsx('animate-zjit-hacked sticky top-0 animate-scroll-out')}
+        key={String(showAnimation)}
+        className={clsx(
+          'animate-scroll-out sticky top-0',
+          showAnimation && 'animate-slide-in'
+        )}
+        onAnimationEnd={() => {
+          setShowAnimation(false);
+          if (ref.current) ref.current.style.animationDelay = '-1s';
+        }}
         ref={ref}
         {...args}
       >
