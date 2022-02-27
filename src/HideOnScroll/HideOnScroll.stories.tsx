@@ -57,14 +57,18 @@ export const PlayGround: Story<HideOnScrollProps> = (args) => {
     >
       {/* <div className="sticky top-0 h-8 bg-white z-10">fixed</div> */}
       <HideOnScroll
-        key={String(showAnimation)}
         className={clsx(
           'animate-scroll-out sticky top-0',
           showAnimation && 'animate-slide-in'
         )}
         onAnimationEnd={() => {
-          setShowAnimation(false);
-          if (ref.current) ref.current.style.animationDelay = '-1s';
+          if (showAnimation && ref.current) {
+            ref.current.style.animationDelay = '-1s';
+            ref.current.style.animation = 'none';
+            ref.current.offsetHeight;
+            ref.current.style.animation = '';
+            setShowAnimation(false);
+          }
         }}
         ref={ref}
         {...args}
