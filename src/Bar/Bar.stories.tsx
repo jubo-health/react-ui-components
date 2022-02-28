@@ -29,28 +29,24 @@ export default {
   },
 } as Meta;
 
-export const PlayGround: Story<BarProps> = (args) => {
-  return <Bar {...args} />;
-};
+export const PlayGround: Story<BarProps> = (args) => <Bar {...args} />;
 PlayGround.args = {
   color: 'dark',
   size: 'l',
   children: '直接在 Children 放文字就可以了',
 };
 
-export const Adornment: Story<BarProps> = () => {
-  return (
-    <>
-      <Bar>
-        <div>With Text Adornment</div>
-        <div className="ml-auto">Adornment</div>
-      </Bar>
-      <Bar>
-        <div>With Icon Adornment</div>
-        <div className="ml-auto">
-          <AccessibleForwardIcon />
-        </div>
-      </Bar>
-    </>
-  );
-};
+export const Adornment: Story<BarProps> = () => (
+  <>
+    <Bar>
+      <div>With Text Adornment</div>
+      <div className="ml-auto">Adornment</div>
+    </Bar>
+    <Bar>
+      <div>With Icon Adornment</div>
+      <div className="ml-auto">
+        <AccessibleForwardIcon />
+      </div>
+    </Bar>
+  </>
+);
