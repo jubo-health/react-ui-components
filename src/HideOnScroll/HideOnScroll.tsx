@@ -16,21 +16,20 @@ export const useHideOnScroll = () => {
   const ref = React.useRef<HTMLDivElement>(null);
   const lastY = React.useRef(0);
   const anchor = React.useRef(0);
-  const [showAnimation, setShowAnimation] = React.useState(false);
 
   const onScroll = React.useCallback((e: React.UIEvent<HTMLElement>) => {
     if (ref.current) {
-      const fullHide = ref.current.style.animationDelay === '0s';
-      const fullShow = !ref.current.style.animationDelay || ref.current.style.animationDelay === '-1s';
+      const fullHide = ref.current.style.transform === 'translateY(-100%)';
+      const fullShow = !ref.current.style.transform || ref.current.style.transform === 'translateY(0%)';
       const dy = e.currentTarget.scrollTop - lastY.current;
       const dh = e.currentTarget.scrollTop - anchor.current;
 
       if ((!fullHide && dy > 0) || dh < ref.current.offsetHeight) {
         const moveOutPropotion = dh / ref.current.offsetHeight;
         if (moveOutPropotion < 1) {
-          ref.current.style.animationDelay = `${moveOutPropotion <= 0 ? -1 : moveOutPropotion - 1}s`;
+          ref.current.style.transform = `translateY(${moveOutPropotion <= 0 ? 0 : -moveOutPropotion * 100}%)`;
         } else {
-          ref.current.style.animationDelay = '0s';
+          ref.current.style.transform = 'translateY(-100%)';
           anchor.current = 0;
         }
       }
@@ -38,31 +37,24 @@ export const useHideOnScroll = () => {
         if (fullShow) {
           anchor.current = e.currentTarget.scrollTop;
         } else if (fullHide && dy < -70) {
-          setShowAnimation(true);
-          ref.current.style.animationDelay = '0s';
+          ref.current.classList.add('transition-transform');
+          ref.current.style.transform = 'translateY(0%)';
         }
       } else if (
         fullHide
         && e.currentTarget.scrollTop + e.currentTarget.clientHeight
         === e.currentTarget.scrollHeight
       ) {
-        setShowAnimation(true);
-        ref.current.style.animationDelay = '0s';
+        ref.current.classList.add('transition-transform');
+        ref.current.style.transform = 'translateY(0%)';
       }
       lastY.current = e.currentTarget.scrollTop;
     }
   }, []);
 
   const onAnimationEnd = React.useCallback(() => {
-    if (showAnimation && ref.current) {
-      ref.current.style.animation = 'none';
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      ref.current.offsetHeight; // trigger reflow
-      ref.current.style.animation = '';
-      ref.current.style.animationDelay = '-1s';
-      setShowAnimation(false);
-    }
-  }, [showAnimation]);
+    if (ref.current) ref.current.classList.remove('transition-transform');
+  }, []);
 
   return {
     onScroll,
@@ -72,12 +64,10 @@ export const useHideOnScroll = () => {
         <div
           ref={ref}
           className={clsx(
-            'animate-[1s_linear_-1s_1_reverse_forwards_paused_scroll-out]',
             'sticky top-0',
-            showAnimation && 'animate-[75ms_ease-in-out_0s_1_reverse_forwards_running_scroll-out]',
             className,
           )}
-          onAnimationEnd={onAnimationEnd}
+          onTransitionEnd={onAnimationEnd}
           {...rest}
         >
           {children}
