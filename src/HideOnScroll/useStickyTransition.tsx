@@ -12,18 +12,20 @@ const defaultInputs: UseStickyTransition = {
   styleKey: 'transform',
 };
 
-const calcParams = (inputs: UseStickyTransition = defaultInputs) => ({
+const calcParams = (inputs: UseStickyTransition) => ({
   ...inputs,
   hideStyle: inputs.interpolateFn(1),
   showStyle: inputs.interpolateFn(0),
-  revealStyle: inputs.styleKey === 'transform' ? inputs.interpolateFn(0) : inputs.interpolateFn(1),
+  revealStyle: inputs.styleKey === 'transform'
+    ? inputs.interpolateFn(0)
+    : inputs.interpolateFn(1),
 });
 
 const useStickyTransition = (inputs?: UseStickyTransition) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const lastY = React.useRef(0);
   const anchor = React.useRef(0);
-  const params = React.useRef(calcParams(inputs || defaultInputs));
+  const params = React.useRef(calcParams({ ...(inputs || {}), ...defaultInputs }));
 
   const onScroll = React.useCallback((e: React.UIEvent<HTMLElement>) => {
     if (ref.current) {
