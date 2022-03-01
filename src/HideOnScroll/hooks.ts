@@ -1,37 +1,24 @@
 import React from 'react';
 
-interface UseStickyTransition {
+interface UseStickyScroll {
   interpolateFn: (n: number) => string;
   transitionClass: string;
   styleKey: 'transform' | 'animationDelay';
+  hideStyle: string;
+  showStyle: string;
+  revealStyle: string;
 }
 
-const defaultInputs: UseStickyTransition = {
-  interpolateFn: (ratio: number) => `translateY(${-ratio * 100}%)`,
-  transitionClass: 'transition-transform',
-  styleKey: 'transform',
-};
-
-const calcParams = (inputs: UseStickyTransition) => ({
-  ...inputs,
-  hideStyle: inputs.interpolateFn(1),
-  showStyle: inputs.interpolateFn(0),
-  revealStyle: inputs.styleKey === 'transform'
-    ? inputs.interpolateFn(0)
-    : inputs.interpolateFn(1),
-});
-
-const useStickyTransition = (inputs?: UseStickyTransition) => {
+const useStickyScroll = (inputs: UseStickyScroll) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const lastY = React.useRef(0);
   const anchor = React.useRef(0);
-  const params = React.useRef(calcParams({ ...(inputs || {}), ...defaultInputs }));
 
   const onScroll = React.useCallback((e: React.UIEvent<HTMLElement>) => {
     if (ref.current) {
       const {
         interpolateFn, transitionClass, styleKey, hideStyle, showStyle, revealStyle,
-      } = params.current;
+      } = inputs;
       const completeHide = ref.current.style[styleKey] === hideStyle;
       const completeShow = !ref.current.style[styleKey]
         || ref.current.style[styleKey] === showStyle;
@@ -57,7 +44,7 @@ const useStickyTransition = (inputs?: UseStickyTransition) => {
         }
       } else if (
         e.currentTarget.scrollTop + e.currentTarget.clientHeight
-        === e.currentTarget.scrollHeight
+        >= e.currentTarget.scrollHeight
       ) {
         anchor.current = e.currentTarget.scrollTop;
         ref.current.classList.add(transitionClass);
@@ -65,12 +52,67 @@ const useStickyTransition = (inputs?: UseStickyTransition) => {
       }
       lastY.current = e.currentTarget.scrollTop;
     }
-  }, []);
+  }, [inputs]);
+
+  return {
+    onScroll,
+    ref,
+  };
+};
+
+interface UseStickyTransition {
+  interpolateFn?: (n: number) => string;
+  transitionClass?: string;
+}
+const calcTransitionParams = (inputs: UseStickyTransition = {}): UseStickyScroll => {
+  const interpolateFn = inputs.interpolateFn || ((ratio: number) => `translateY(${-ratio * 100}%)`);
+  return {
+    interpolateFn,
+    transitionClass: inputs.transitionClass || 'transition-transform',
+    hideStyle: interpolateFn(1),
+    showStyle: interpolateFn(0),
+    revealStyle: interpolateFn(0),
+    styleKey: 'transform',
+  };
+};
+export const useStickyTransition = (inputs?: UseStickyTransition) => {
+  const params = React.useRef(calcTransitionParams(inputs));
+  const { ref, onScroll } = useStickyScroll(params.current);
 
   const onTransitionEnd = React.useCallback(() => {
-    const { transitionClass } = params.current;
-    if (ref.current) ref.current.classList.remove(transitionClass);
-  }, []);
+    if (ref.current) ref.current.classList.remove(params.current.transitionClass);
+  }, [ref]);
+
+  return {
+    onScroll,
+    onTransitionEnd,
+    ref,
+  };
+};
+
+interface UseStickyAnimation {
+  interpolateFn?: (n: number) => string;
+  transitionClass?: string;
+}
+const calcAnimationParams = (inputs: UseStickyAnimation = {}): UseStickyScroll => {
+  const interpolateFn = inputs.interpolateFn || ((ratio: number) => `${ratio - 1}s`);
+  return {
+    interpolateFn,
+    transitionClass: inputs.transitionClass || 'animate-[750ms_ease-in-out_0s_1_reverse_forwards_running_scroll-out]',
+    hideStyle: interpolateFn(1),
+    showStyle: interpolateFn(0),
+    revealStyle: interpolateFn(1),
+    styleKey: 'animationDelay',
+  };
+};
+/**
+ * animation version WIP
+ * @param inputs
+ * @returns
+ */
+export const useStickyAnimation = (inputs?: UseStickyAnimation) => {
+  const params = React.useRef(calcAnimationParams(inputs));
+  const { ref, onScroll } = useStickyScroll(params.current);
 
   const onAnimationEnd = React.useCallback(() => {
     const { transitionClass } = params.current;
@@ -82,14 +124,11 @@ const useStickyTransition = (inputs?: UseStickyTransition) => {
       ref.current.style.animationDelay = '-1s';
       ref.current.classList.remove(transitionClass);
     }
-  }, []);
+  }, [ref]);
 
   return {
     onScroll,
     onAnimationEnd,
-    onTransitionEnd,
     ref,
   };
 };
-
-export default useStickyTransition;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
-import useStickyTransition from './useStickyTransition';
+import { useStickyTransition, useStickyAnimation } from './hooks';
 
 export default {
   title: 'HideOnScroll',
@@ -9,6 +9,27 @@ export default {
 } as Meta;
 
 export const PlayGround: Story<any> = (args) => {
+  const { onScroll, ref, onTransitionEnd } = useStickyTransition();
+  return (
+    <div
+      className="h-80 relative overflow-auto"
+      onScroll={onScroll}
+    >
+      <div className="sticky top-0 h-12 p-2 text-white bg-main z-10">fixed</div>
+      <div className="bg-gray-300 p-2 sticky top-12" ref={ref} onTransitionEnd={onTransitionEnd}>
+        Hide
+      </div>
+      {Array(300)
+        .fill('')
+        .map((tmp, index) => (
+          <div key={index}>{index}</div>
+        ))}
+    </div>
+  );
+};
+PlayGround.args = {};
+
+export const Transition: Story<any> = (args) => {
   const { onScroll, ref, onTransitionEnd } = useStickyTransition();
   return (
     <div
@@ -27,14 +48,14 @@ export const PlayGround: Story<any> = (args) => {
     </div>
   );
 };
-PlayGround.args = {};
 
+/**
+ * WIP
+ * @param args
+ * @returns
+ */
 export const Animate: Story<any> = (args) => {
-  const { onScroll, ref, onAnimationEnd } = useStickyTransition({
-    interpolateFn: (ratio: number) => `${ratio - 1}s`,
-    transitionClass: 'animate-[0.075s_ease-in-out_0s_1_reverse_forwards_running_scroll-out]',
-    styleKey: 'animationDelay',
-  });
+  const { onScroll, ref, onAnimationEnd } = useStickyAnimation();
   return (
     <div
       className="h-80 relative overflow-auto"
