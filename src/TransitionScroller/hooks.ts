@@ -83,11 +83,11 @@ export const useStickyTransition = (inputs?: UseStickyTransition) => {
     if (ref.current) ref.current.classList.remove(params.current.transitionClass);
   }, [ref]);
 
-  return {
+  return React.useMemo(() => ({
     onScroll,
     onTransitionEnd,
     ref,
-  };
+  }), [onScroll, onTransitionEnd, ref]);
 };
 
 interface UseStickyAnimation {
@@ -126,9 +126,9 @@ export const useStickyAnimation = (inputs?: UseStickyAnimation) => {
     }
   }, [ref]);
 
-  return {
+  return React.useMemo(() => ({
     onScroll,
     onAnimationEnd,
     ref,
-  };
+  }), [onAnimationEnd, onScroll, ref]);
 };

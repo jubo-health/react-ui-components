@@ -2,6 +2,7 @@ import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
 import { useStickyTransition, useStickyAnimation } from './hooks';
+import TransitionScroller from './TransitionScroller';
 
 export default {
   title: 'HideOnScroll',
@@ -11,19 +12,19 @@ export default {
 export const PlayGround: Story<any> = (args) => {
   const { onScroll, ref, onTransitionEnd } = useStickyTransition();
   return (
-    <div
-      className="h-80 relative overflow-auto"
-      onScroll={onScroll}
-    >
-      <div className="sticky top-0 h-12 p-2 text-white bg-main z-10">fixed</div>
-      <div className="bg-gray-300 p-2 sticky top-12" ref={ref} onTransitionEnd={onTransitionEnd}>
-        Hide
-      </div>
-      {Array(300)
-        .fill('')
-        .map((tmp, index) => (
-          <div key={index}>{index}</div>
-        ))}
+    <div className="flex flex-col h-80">
+      <div>Header</div>
+      <div>Subheader</div>
+      <TransitionScroller className="flex-1">
+        <TransitionScroller.Transition>
+          Scroll
+        </TransitionScroller.Transition>
+        {Array(300)
+          .fill('')
+          .map((tmp, index) => (
+            <div key={index}>{index}</div>
+          ))}
+      </TransitionScroller>
     </div>
   );
 };
@@ -36,8 +37,7 @@ export const Transition: Story<any> = (args) => {
       className="h-80 relative overflow-auto"
       onScroll={onScroll}
     >
-      <div className="sticky top-0 h-8 bg-white z-10">fixed</div>
-      <div className="bg-gray-200 p-2 sticky top-8" ref={ref} onTransitionEnd={onTransitionEnd}>
+      <div className="bg-gray-200 p-2 sticky top-0" ref={ref} onTransitionEnd={onTransitionEnd}>
         Hide
       </div>
       {Array(300)
@@ -61,9 +61,8 @@ export const Animate: Story<any> = (args) => {
       className="h-80 relative overflow-auto"
       onScroll={onScroll}
     >
-      <div className="sticky top-0 h-8 bg-white z-10">fixed</div>
       <div
-        className="bg-gray-200 p-2 sticky top-8 animate-[1s_linear_-1s_1_reverse_forwards_paused_scroll-out]"
+        className="bg-gray-200 p-2 sticky top-0 animate-[1s_linear_-1s_1_reverse_forwards_paused_scroll-out]"
         ref={ref}
         onAnimationEnd={onAnimationEnd}
       >
