@@ -2,14 +2,14 @@ import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
 import { useStickyTransition, useStickyAnimation } from './hooks';
-import TransitionScroller from './TransitionScroller';
+import TransitionScroller, { TransitionScollerType } from './TransitionScroller';
 
 export default {
-  title: 'HideOnScroll',
-  // component: HideOnScroll,
+  title: 'TransitionScroller',
+  component: TransitionScroller,
 } as Meta;
 
-export const PlayGround: Story<any> = (args) => {
+export const PlayGround: Story<TransitionScollerType> = (args) => {
   const { onScroll, ref, onTransitionEnd } = useStickyTransition();
   return (
     <div className="flex flex-col h-80">

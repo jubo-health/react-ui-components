@@ -14,7 +14,7 @@ const TransitionContext = React.createContext<StickyTransition>({
   ref: { current: null },
 });
 
-interface TransitionScollerType extends React.ComponentProps<'div'> {
+export interface TransitionScollerType extends React.ComponentProps<'div'> {
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 const TransitionScoller = (props: TransitionScollerType) => {
