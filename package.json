@@ -1,12 +1,12 @@
 {
   "name": "@jubo-health/react-ui-components",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "license": "MIT",
   "main": "lib/index.js",
   "module": "lib/index.esm.js",
   "types": "lib/index.d.ts",
   "files": [
-    "/lib"
+    "/lib/*"
   ],
   "devDependencies": {
     "@babel/core": "^7.16.7",
@@ -62,7 +62,8 @@
   "scripts": {
     "start": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "publish": "npm run build && npm publish --access public"
   },
   "description": "This library is aim to support the development of [jubo.health](https://www.jubo-health.com/) products, so pull requests and issues would probably be push aside.",
   "directories": {
