@@ -41,15 +41,16 @@
     "import/no-extraneous-dependencies": [
       "error",
       {
-        "devDependencies": [
-          "**/*.stories.*",
-          "**/.storybook/**/*.*"
-        ],
+        "devDependencies": ["**/*.stories.*", "**/.storybook/**/*.*"],
         "peerDependencies": true
       }
     ],
     "react/jsx-props-no-spreading": [0],
     "react/require-default-props": [1],
-    "no-restricted-exports": [0]
+    "no-restricted-exports": [0],
+    "indent": "off",
+    "@typescript-eslint/indent": "off",
+    "object-curly-newline": ["error", { "multiline": true }],
+    "jsx-quotes": ["error", "prefer-single"]
   }
 }
