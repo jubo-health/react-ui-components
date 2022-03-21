@@ -14,11 +14,9 @@
     "airbnb-typescript",
     "airbnb/hooks",
     "plugin:@typescript-eslint/recommended",
-    "plugin:jest/recommended"
-    // "prettier",
-    // "prettier/react",
-    // "prettier/@typescript-eslint",
-    // "plugin:prettier/recommended"
+    "plugin:jest/recommended",
+    "prettier",
+    "plugin:prettier/recommended"
   ],
   "plugins": ["react", "react-hooks", "@typescript-eslint", "jest"],
   "env": {
@@ -50,7 +48,17 @@
     "no-restricted-exports": [0],
     "indent": "off",
     "@typescript-eslint/indent": "off",
-    "object-curly-newline": ["error", { "multiline": true }],
-    "jsx-quotes": ["error", "prefer-single"]
+    "object-curly-newline": "off",
+    "jsx-quotes": ["error", "prefer-single"],
+    "operator-linebreak": ["warn", "after"],
+    "prettier/prettier": [
+      "error",
+      {},
+      {
+        "fileInfoOptions": {
+          "withNodeModules": true
+        }
+      }
+    ]
   }
 }

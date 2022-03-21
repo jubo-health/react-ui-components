@@ -9,8 +9,8 @@ interface StickyTransition {
   ref: React.RefObject<HTMLDivElement>;
 }
 const TransitionContext = React.createContext<StickyTransition>({
-  onScroll: (e: any) => {},
-  onTransitionEnd: () => { },
+  onScroll: () => {},
+  onTransitionEnd: () => {},
   ref: { current: null },
 });
 
@@ -21,14 +21,21 @@ const TransitionScoller = (props: TransitionScollerType) => {
   const { className, onScroll, ...rest } = props;
   const value = useStickyTransition();
 
-  const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    value.onScroll(e);
-    if (onScroll) onScroll(e);
-  }, [onScroll, value]);
+  const handleScroll = React.useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      value.onScroll(e);
+      if (onScroll) onScroll(e);
+    },
+    [onScroll, value]
+  );
 
   return (
     <TransitionContext.Provider value={value}>
-      <div className={clsx('relative overflow-auto', className)} onScroll={handleScroll} {...rest} />
+      <div
+        className={clsx('relative overflow-auto', className)}
+        onScroll={handleScroll}
+        {...rest}
+      />
     </TransitionContext.Provider>
   );
 };
