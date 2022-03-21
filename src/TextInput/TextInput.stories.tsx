@@ -8,7 +8,7 @@ export default {
   component: TextInput,
 } as Meta;
 
-export const PlayGround: Story<TextInputProps> = (args) => {
-  return <TextInput {...args} />;
-};
+export const PlayGround: Story<TextInputProps> = (args) => (
+  <TextInput {...args} />
+);
 PlayGround.args = {};
