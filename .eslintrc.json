@@ -50,7 +50,11 @@
     "@typescript-eslint/indent": "off",
     "object-curly-newline": "off",
     "jsx-quotes": ["error", "prefer-single"],
-    "operator-linebreak": ["warn", "after"],
+    "operator-linebreak": [
+      "warn",
+      "after",
+      { "overrides": { "?": "before", ":": "before" } }
+    ],
     "prettier/prettier": [
       "error",
       {},
