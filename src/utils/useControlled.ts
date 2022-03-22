@@ -17,7 +17,7 @@ export default function useControlled<T>({
         setState(v);
       }
     },
-    [isControlled],
+    [isControlled]
   );
   return [(isControlled ? outerState : state) as T, resultSetState];
 }

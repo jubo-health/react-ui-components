@@ -28,32 +28,42 @@ export type AccordionProps<BaseElement> = AsProps<BaseElement> &
   PropsOf<BaseElement> &
   AccordionOnlyProps<BaseElement>;
 
+function useAccordionContext() {
+  const context = React.useContext(AccordionContext);
+  if (!context) {
+    throw new Error(
+      'Toggle compound components cannot be rendered outside the Toggle component'
+    );
+  }
+  return context;
+}
+
 const Accordion = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
-  props: AccordionProps<BaseElement>,
+  props: AccordionProps<BaseElement>
 ) => {
   const {
     className,
     as,
     expandedProps,
     defaultExpand,
-    expanded: outerExpand,
+    expanded: outerState,
     onClick,
     ...rest
   } = props;
   const [expanded, setExpanded] = useControlled<boolean>({
-    state: outerExpand,
+    state: outerState,
     default: Boolean(defaultExpand),
   });
   const handleClicked = React.useCallback(
-    (event) => {
+    event => {
       event.stopPropagation();
-      setExpanded((prev) => !prev);
+      setExpanded(prev => !prev);
     },
-    [setExpanded],
+    [setExpanded]
   );
   const value = React.useMemo(
     () => ({ expanded, handleClicked }),
-    [expanded, handleClicked],
+    [expanded, handleClicked]
   );
 
   return (
@@ -71,20 +81,15 @@ Accordion.defaultProps = {
   expandedClassName: undefined,
   defaultExpand: false,
   expanded: undefined,
+} as {
+  expandedProps: object;
+  expandedClassName: undefined;
+  defaultExpand: false;
+  expanded: undefined;
 };
 
-function useAccordionContext() {
-  const context = React.useContext(AccordionContext);
-  if (!context) {
-    throw new Error(
-      'Toggle compound components cannot be rendered outside the Toggle component',
-    );
-  }
-  return context;
-}
-
 const Summary = <BasicElement extends React.ElementType = typeof DEFAULT_BASE>(
-  props: AccordionProps<BasicElement>,
+  props: AccordionProps<BasicElement>
 ) => {
   const { as, className, expandedClassName, expandedProps, ...rest } = props;
   const { expanded } = useAccordionContext();
@@ -92,7 +97,7 @@ const Summary = <BasicElement extends React.ElementType = typeof DEFAULT_BASE>(
     className: clsx(
       'flex items-center',
       className,
-      expanded && expandedClassName,
+      expanded && expandedClassName
     ),
     ...rest,
     ...(expanded ? expandedProps : {}),
@@ -106,24 +111,22 @@ Summary.defaultProps = {
 };
 
 const Detail = <BasicElement extends React.ElementType = typeof DEFAULT_BASE>(
-  props: AccordionProps<BasicElement>,
+  props: AccordionProps<BasicElement>
 ) => {
   const { as, className, expandedProps, ...rest } = props;
   const ref = React.useRef<HTMLDivElement>(null);
   const { expanded } = useAccordionContext();
 
-  console.log(ref.current?.offsetHeight);
-  return <div ref={ref}>test</div>;
-  // return React.createElement(as || 'div', {
-  //   className: clsx(
-  //     'transition-[max-height] overflow-hidden',
-  //     // expanded ? 'max-h-40' : 'max-h-0',
-  //     className,
-  //   ),
-  //   ref,
-  //   ...rest,
-  //   ...(expanded ? expandedProps : {}),
-  // });
+  return React.createElement(as || 'div', {
+    className: clsx(
+      'transition-[max-height] overflow-hidden',
+      expanded ? 'max-h-40' : 'max-h-0',
+      className
+    ),
+    ref,
+    ...rest,
+    ...(expanded ? expandedProps : {}),
+  });
 };
 Detail.defaultProps = {
   expandedProps: {},
@@ -140,7 +143,7 @@ const Toggle = (props: { children: React.ReactNode }) => {
   }
   return (
     <>
-      {React.Children.map(children, (child) => {
+      {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
           return React.cloneElement(child, { onClick: handleClicked });
         }
@@ -151,7 +154,7 @@ const Toggle = (props: { children: React.ReactNode }) => {
 };
 
 const Button = <BasicElement extends React.ElementType = typeof DEFAULT_BASE>(
-  props: AccordionProps<BasicElement>,
+  props: AccordionProps<BasicElement>
 ) => {
   const { onClick, children, expandedProps, expandedClassName } = props;
   const { expanded } = useAccordionContext();
@@ -159,7 +162,7 @@ const Button = <BasicElement extends React.ElementType = typeof DEFAULT_BASE>(
     <div
       role='button'
       tabIndex={-1}
-      className={clsx('m-2', expanded && expandedClassName)}
+      className={clsx('m-2 w-6 h-6', expanded && expandedClassName)}
       onClick={onClick}
       onKeyPress={onClick}
       {...(expanded ? expandedProps : {})}
