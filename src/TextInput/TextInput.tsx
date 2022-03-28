@@ -1,10 +1,11 @@
-/* eslint-disable react/require-default-props */
 import React from 'react';
 import clsx from 'clsx';
 
-export interface TextInputProps extends React.HTMLAttributes<HTMLInputElement> {
+export interface TextInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
+   * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
    */
   size?: 'sm' | 'lg';
   /**
@@ -27,11 +28,15 @@ export interface TextInputProps extends React.HTMLAttributes<HTMLInputElement> {
    * 輸入狀態，僅影響底線顏色
    */
   status?: 'default' | 'warning' | 'error';
+  /**
+   * input原生的屬性: size，以字元長度定義的寬度，但現版面多直接給定 rem-base or pixel-base 的寬度所以也不大建議使用
+   */
+  widthInCharLength?: number;
 }
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   (props, ref) => {
-    const { size, status, ...rest } = props;
+    const { size, status, widthInCharLength, ...rest } = props;
     return (
       <div
         className={clsx(
@@ -53,6 +58,7 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
             size === 'lg' ? 'text-lg h-10' : 'h-8'
           )}
           tabIndex={0}
+          size={widthInCharLength}
           {...rest}
         />
       </div>
