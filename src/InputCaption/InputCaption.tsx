@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-export interface TextInputProps
+export interface InputCaptionProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
@@ -30,7 +30,7 @@ export interface TextInputProps
   widthInCharLength?: number;
 }
 
-const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
+const InputCaption = React.forwardRef<HTMLInputElement, InputCaptionProps>(
   (props, ref) => {
     const { size, status, widthInCharLength, ...rest } = props;
     return (
@@ -64,6 +64,6 @@ type DefaultProps = {
   size: 'lg';
   status: 'default';
 };
-TextInput.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
+InputCaption.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
 
-export default TextInput;
+export default InputCaption;
