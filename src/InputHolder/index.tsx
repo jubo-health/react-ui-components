@@ -1,5 +1,5 @@
 import React from 'react';
-import clsx from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export interface InputHolderProps
   extends Omit<React.ComponentProps<'div'>, 'ref'> {
@@ -21,14 +21,23 @@ export interface InputHolderProps
    */
   status?: 'default' | 'warning' | 'error';
   children: React.ReactNode;
+  className: string;
 }
 
 const InputHolder = React.forwardRef<HTMLDivElement, InputHolderProps>(
   (props, ref) => {
-    const { size, status, children, startAdornment, endAdornment } = props;
+    const {
+      size,
+      status,
+      children,
+      startAdornment,
+      endAdornment,
+      className,
+      ...rest
+    } = props;
     return (
       <div
-        className={clsx(
+        className={twMerge(
           'inline-flex relative after:border-b after:border-b-grey-400 after:absolute after:bottom-0 after:inset-x-0 w-c',
           'hover:after:border-b-2',
           'focus-within:after:border-b-2',
@@ -38,9 +47,11 @@ const InputHolder = React.forwardRef<HTMLDivElement, InputHolderProps>(
             : 'hover:after:border-b-grey-900',
           status === 'default' && 'focus-within:after:border-b-primary',
           'leading-6',
-          size === 'lg' ? 'text-lg h-10' : 'h-8'
+          size === 'lg' ? 'text-lg h-10' : 'h-8',
+          className
         )}
         ref={ref}
+        {...rest}
       >
         {startAdornment}
         {children}

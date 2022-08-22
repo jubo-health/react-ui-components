@@ -45,6 +45,7 @@
     ],
     "react/jsx-props-no-spreading": [0],
     "react/require-default-props": [1],
+    "react/prop-types": 0,
     "no-restricted-exports": [0],
     "indent": "off",
     "@typescript-eslint/indent": "off",

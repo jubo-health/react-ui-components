@@ -1,7 +1,9 @@
 import React from 'react';
-import clsx from 'clsx';
 
-export interface TextAreaProps
+import { twMerge } from 'tailwind-merge';
+import InputHolder from '../InputHolder';
+
+export interface TextareaProps
   extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
@@ -21,10 +23,6 @@ export interface TextAreaProps
    */
   endAdornment?: React.ReactNode;
   /**
-   * 是否允許多行輸入
-   */
-  multiline?: boolean;
-  /**
    * 輸入狀態，僅影響底線顏色
    */
   status?: 'default' | 'warning' | 'error';
@@ -34,35 +32,50 @@ export interface TextAreaProps
   widthInCharLength?: number;
 }
 
-const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   (props, ref) => {
-    const { size, status, widthInCharLength, ...rest } = props;
+    const { size, status, widthInCharLength, className, style, ...rest } =
+      props;
+    const [value, setValue] = React.useState('');
     return (
-      <div
-        className={clsx(
-          'inline-flex relative after:border-b after:border-b-grey-400 after:absolute after:bottom-0 after:inset-x-0 w-c',
-          'hover:after:border-b-2',
-          'focus-within:after:border-b-2',
-          status === 'warning' && 'focus-within:after:border-b-warning',
-          status === 'error'
-            ? 'after:border-b-error after:border-b-2'
-            : 'hover:after:border-b-grey-900',
-          status === 'default' && 'focus-within:after:border-b-primary',
-          'leading-6',
-          size === 'lg' ? 'text-lg h-10' : 'h-8'
+      <InputHolder
+        className={twMerge(
+          'before:whitespace-pre-wrap before:invisible before:line-clamp-5',
+          // pb-4 for preserve scrollbar
+          'before:content-[attr(data-value)] before:row-span-full before:col-span-full before:pr-4',
+          'inline-grid h-auto pb-1.5',
+          className,
+          className &&
+            className
+              .split(' ')
+              .map(s => `before:${s}`)
+              .join(' ')
         )}
+        style={style}
+        status={status}
+        size={size}
+        data-value={`${value} `}
       >
         <textarea
           ref={ref}
-          className={clsx('resize-none outline-none bg-transparent')}
+          className={twMerge(
+            'resize-none outline-none bg-transparent row-span-full col-span-full',
+            className
+          )}
+          style={style}
           autoComplete='off'
           autoCorrect='off'
           autoCapitalize='off'
           spellCheck='false'
           tabIndex={0}
+          rows={1}
+          onChange={e => {
+            setValue(e.currentTarget.value);
+            console.log(e.currentTarget.value);
+          }}
           {...rest}
         />
-      </div>
+      </InputHolder>
     );
   }
 );
@@ -71,6 +84,6 @@ type DefaultProps = {
   size: 'lg';
   status: 'default';
 };
-TextArea.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
+Textarea.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
 
-export default TextArea;
+export default Textarea;

@@ -66,6 +66,7 @@ module.exports = {
     extend: {},
   },
   plugins: [
+    require('@tailwindcss/line-clamp'),
     plugin(function ({ addVariant }) {
       addVariant('hover', '&:hover');
       addVariant('focus-within', '&:focus-within'); // change variant order
