@@ -21,7 +21,7 @@ export interface InputHolderProps
    */
   status?: 'default' | 'warning' | 'error';
   children: React.ReactNode;
-  className: string;
+  className?: string;
 }
 
 const InputHolder = React.forwardRef<HTMLDivElement, InputHolderProps>(
@@ -47,7 +47,7 @@ const InputHolder = React.forwardRef<HTMLDivElement, InputHolderProps>(
             : 'hover:after:border-b-grey-900',
           status === 'default' && 'focus-within:after:border-b-primary',
           'leading-6',
-          size === 'lg' ? 'text-lg h-10' : 'h-8',
+          size === 'lg' ? 'text-lg h-10 mb-2' : 'h-8 mb-1',
           className
         )}
         ref={ref}

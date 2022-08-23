@@ -1,18 +1,15 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import InputHolder, { InputHolderProps } from '../InputHolder';
+import InputHolder from '../InputHolder';
 
-export interface InputProps extends InputHolderProps {
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
    */
   size?: 'sm' | 'lg';
-  /**
-   * 無內容時底部的文字
-   */
-  placeholder?: string;
   /**
    * 前（左）方裝飾物
    */
