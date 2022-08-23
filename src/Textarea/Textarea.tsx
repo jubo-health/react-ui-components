@@ -42,13 +42,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       style,
       children: propsValue,
       onChange,
+      defaultValue,
       ...rest
     } = props;
     const skeleton = React.useRef<HTMLDivElement>(null);
     const { current: isControlled } = React.useRef(
       typeof propsValue !== 'undefined'
     );
-    const [value, setValue] = React.useState('');
+    const [value, setValue] = React.useState(defaultValue ?? '');
 
     // for the mismatch of scrollbar auto judgements
     // between skeleton and textarea
@@ -82,7 +83,6 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         style={style}
         status={status}
         size={size}
-        data-value={`${value} `}
       >
         <div
           className={twMerge(
@@ -92,6 +92,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           )}
           ref={skeleton}
         >
+          {/* space is nessesary */}
           {`${isControlled ? propsValue : value} `}
         </div>
         <textarea

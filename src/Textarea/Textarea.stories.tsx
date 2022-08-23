@@ -9,9 +9,7 @@ export default {
   component: Textarea,
 } as Meta;
 
-export const PlayGround: Story<TextareaProps> = args => (
-  <Textarea className='w-40' {...args} />
-);
+export const PlayGround: Story<TextareaProps> = args => <Textarea {...args} />;
 PlayGround.args = {};
 
 export const Usecase: Story<TextareaProps> = args => {
@@ -22,25 +20,34 @@ export const Usecase: Story<TextareaProps> = args => {
     'sometimes I sometimes I sometimes I sometimes I sometimes I sometimes I sometimes I sometimes I sometimes I'
   );
   return (
-    <div>
-      <div>scroll bar should not show</div>
-      <Textarea
-        className='w-40'
-        onChange={e => {
-          setCase1(e.currentTarget.value);
-        }}
-      >
-        {case1}
-      </Textarea>
-      <div>scroll bar should not show</div>
-      <Textarea
-        onChange={e => {
-          setCase2(e.currentTarget.value);
-        }}
-      >
-        {case2}
-      </Textarea>
-    </div>
+    <>
+      <div className='mb-8'>
+        <div className='font-bold'>scroll bar should not show</div>
+        <Textarea
+          className='w-40'
+          onChange={e => {
+            setCase1(e.currentTarget.value);
+          }}
+        >
+          {case1}
+        </Textarea>
+      </div>
+      <div className='mb-8'>
+        <div className='font-bold'>scroll bar should not show</div>
+        <Textarea
+          onChange={e => {
+            setCase2(e.currentTarget.value);
+          }}
+        >
+          {case2}
+        </Textarea>
+      </div>
+      <div className='mb-8'>
+        <div className='font-bold'>should align</div>
+        <Textarea defaultValue='align' />
+        <Input defaultValue='align' />
+      </div>
+    </>
   );
 };
 PlayGround.args = {};
