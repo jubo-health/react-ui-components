@@ -44,8 +44,8 @@ export const Usecase: Story<TextareaProps> = args => {
       </div>
       <div className='mb-8'>
         <div className='font-bold'>should align</div>
-        <Textarea defaultValue='align' />
-        <Input defaultValue='align' />
+        <Textarea className='w-10' defaultValue='align' />
+        <Input className='w-10' defaultValue='align' />
       </div>
     </>
   );

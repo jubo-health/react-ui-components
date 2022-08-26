@@ -46,8 +46,9 @@ const InputHolder = React.forwardRef<HTMLDivElement, InputHolderProps>(
             ? 'after:border-b-error after:border-b-2'
             : 'hover:after:border-b-grey-900',
           status === 'default' && 'focus-within:after:border-b-primary',
-          'leading-6',
-          size === 'lg' ? 'text-lg h-10 mb-2' : 'h-8 mb-1',
+          size === 'lg'
+            ? 'text-lg h-10 mb-2 py-2 leading-6'
+            : 'h-8 mb-1 py-1 leading-[1.375rem]',
           className
         )}
         ref={ref}

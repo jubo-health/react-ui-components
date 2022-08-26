@@ -87,7 +87,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <div
           className={twMerge(
             'whitespace-pre-wrap line-clamp-5 break-words invisible',
-            'row-span-full col-span-full pb-1.5',
+            'row-span-full col-span-full leading-6',
             className
           )}
           ref={skeleton}
@@ -98,7 +98,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           className={twMerge(
-            'resize-none outline-none bg-transparent row-span-full col-span-full pb-1.5',
+            'resize-none outline-none bg-transparent',
+            'row-span-full col-span-full leading-6',
             showScrollbar ? 'overflow-y-auto' : 'overflow-hidden',
             className
           )}
