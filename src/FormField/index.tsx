@@ -6,9 +6,9 @@ export interface FormFieldProps {
   sublabel?: string;
   required?: boolean;
   caption?: string;
+  status?: 'default' | 'warning' | 'error';
   // children?: React.ReactNode | ((register: any) => any);
   children?: React.ReactNode;
-  status?: 'default' | 'warning' | 'error';
 }
 const FormField = (props: FormFieldProps) => {
   const { label, sublabel, required, caption, children, status } = props;
@@ -27,11 +27,7 @@ const FormField = (props: FormFieldProps) => {
         <div className='text-xs text-grey-500'>{sublabel}</div>
       </div>
       <div className='flex-1'>
-        <div className='w-full'>
-          {React.isValidElement(children)
-            ? React.cloneElement(children, { status })
-            : children}
-        </div>
+        <div className='w-full'>{children}</div>
         <div
           className={twMerge(
             'text-xs leading-[.875rem] text-grey-500',
