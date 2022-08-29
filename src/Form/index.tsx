@@ -4,15 +4,20 @@ import {
   FormProvider,
   useFormContext,
   useFormState,
+  Resolver,
+  SubmitHandler,
+  FieldValues,
 } from 'react-hook-form';
 import FormField from '../FormField';
 
-export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
-  resolver: any;
-  onError: any;
+export interface FormProps
+  extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
+  resolver?: Resolver;
+  onError?: any;
+  onSubmit: SubmitHandler<FieldValues>;
 }
 
-const Form = (props: FormProps) => {
+const Form = function Form(props: FormProps) {
   const { resolver, onSubmit, onError, children } = props;
   const methods = useForm({
     mode: 'onBlur',
@@ -68,10 +73,7 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   } = props;
   const { register } = useFormContext();
   const { errors } = useFormState();
-  console.log(
-    errors[name]?.type === 'required' ? '請輸入必填欄位' : undefined,
-    errors[name]
-  );
+
   return (
     <FormField
       label={label}
@@ -82,13 +84,18 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     >
       {React.createElement(component, {
         status: errors[name] ? 'error' : undefined,
-        ...rest,
         ...register(name, {
-          validate: { required: () => false },
-          // required,
+          validate: {
+            required: d =>
+              !required ||
+              (d && typeof d === 'object'
+                ? Object.keys(d).length > 0
+                : d && d !== 0 && d !== false),
+          },
           onChange,
           onBlur,
         }),
+        ...rest,
       })}
     </FormField>
   );

@@ -32,10 +32,7 @@
     "linebreak-style": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "react/function-component-definition": [
-      1,
-      { "namedComponents": "arrow-function" }
-    ],
+    "react/function-component-definition": [0],
     "import/no-extraneous-dependencies": [
       "error",
       {

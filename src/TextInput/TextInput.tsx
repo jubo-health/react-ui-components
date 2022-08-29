@@ -1,5 +1,7 @@
 import React from 'react';
-import clsx from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+import InputHolder from '../InputHolder';
 
 export interface TextInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
@@ -8,10 +10,6 @@ export interface TextInputProps
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
    */
   size?: 'sm' | 'lg';
-  /**
-   * 無內容時底部的文字
-   */
-  placeholder?: string;
   /**
    * 前（左）方裝飾物
    */
@@ -32,30 +30,17 @@ export interface TextInputProps
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   (props, ref) => {
-    const { size, status, widthInCharLength, ...rest } = props;
+    const { size, status, widthInCharLength, className, ...rest } = props;
     return (
-      <div
-        className={clsx(
-          'inline-flex relative after:border-b after:border-b-grey-400 after:absolute after:bottom-0 after:inset-x-0 w-c',
-          'hover:after:border-b-2',
-          'focus-within:after:border-b-2',
-          status === 'warning' && 'focus-within:after:border-b-warning',
-          status === 'error'
-            ? 'after:border-b-error after:border-b-2'
-            : 'hover:after:border-b-grey-900',
-          status === 'default' && 'focus-within:after:border-b-primary',
-          'leading-6',
-          size === 'lg' ? 'text-lg h-10' : 'h-8'
-        )}
-      >
+      <InputHolder status={status} size={size}>
         <input
           ref={ref}
-          className={clsx('outline-none bg-transparent')}
+          className={twMerge('outline-none bg-transparent', className)}
           tabIndex={0}
           size={widthInCharLength}
           {...rest}
         />
-      </div>
+      </InputHolder>
     );
   }
 );

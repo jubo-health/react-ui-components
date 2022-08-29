@@ -2,7 +2,7 @@ import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
 import Textarea, { TextareaProps } from './Textarea';
-import Input from '../Input';
+import TextInput from '../TextInput';
 
 export default {
   title: 'Textarea',
@@ -45,7 +45,9 @@ export const Usecase: Story<TextareaProps> = args => {
       <div className='mb-8'>
         <div className='font-bold'>should align</div>
         <Textarea className='w-10' defaultValue='align' />
-        <Input className='w-10' defaultValue='align' />
+        <Textarea className='w-10' placeholder='Align' />
+        <TextInput className='w-10' defaultValue='align' />
+        <TextInput className='w-10' placeholder='Align' />
       </div>
     </>
   );
