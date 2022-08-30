@@ -42,13 +42,10 @@ export type ComponentProps<BasicElement> = {
 };
 
 const DEFAULT_BASE = 'input';
-interface FieldOnlyProps extends React.ComponentProps<typeof FormField> {
+interface FieldOnlyProps
+  extends Omit<React.ComponentProps<typeof FormField.Label>, 'children'> {
   name: string;
   label?: string;
-  sublabel?: string;
-  caption?: string;
-  status?: 'default' | 'warning' | 'error';
-  required?: boolean;
   onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
 }
@@ -67,36 +64,36 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     onBlur,
     label,
     sublabel,
-    caption,
-    status,
     ...rest
   } = props;
   const { register } = useFormContext();
   const { errors } = useFormState();
 
   return (
-    <FormField
-      label={label}
-      sublabel={sublabel}
-      caption={errors[name]?.type === 'required' ? '請輸入必填欄位' : caption}
-      status={errors[name] ? 'error' : status}
-      required={required}
-    >
-      {React.createElement(component, {
-        status: errors[name] ? 'error' : undefined,
-        ...register(name, {
-          validate: {
-            required: d =>
-              !required ||
-              (d && typeof d === 'object'
-                ? Object.keys(d).length > 0
-                : d && d !== 0 && d !== false),
-          },
-          onChange,
-          onBlur,
-        }),
-        ...rest,
-      })}
+    <FormField>
+      <FormField.Label sublabel={sublabel} required={required}>
+        {label}
+      </FormField.Label>
+      <FormField.Container>
+        {React.createElement(component, {
+          status: errors[name] ? 'error' : undefined,
+          ...register(name, {
+            validate: {
+              required: d =>
+                !required ||
+                (d && typeof d === 'object'
+                  ? Object.keys(d).length > 0
+                  : d && d !== 0 && d !== false),
+            },
+            onChange,
+            onBlur,
+          }),
+          ...rest,
+        })}
+        <FormField.Caption status={errors[name] ? 'error' : 'default'}>
+          {errors[name]?.type === 'required' ? '請輸入必填欄位' : null}
+        </FormField.Caption>
+      </FormField.Container>
     </FormField>
   );
 };

@@ -1,48 +1,62 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
 
-export interface FormFieldProps {
-  label?: string;
-  sublabel?: string;
+interface FieldLabelProps {
+  children: React.ReactNode;
   required?: boolean;
-  caption?: string;
-  status?: 'default' | 'warning' | 'error';
-  // children?: React.ReactNode | ((register: any) => any);
-  children?: React.ReactNode;
+  sublabel?: string;
 }
-const FormField = (props: FormFieldProps) => {
-  const { label, sublabel, required, caption, children, status } = props;
+
+const FieldLabel = (props: FieldLabelProps) => {
+  const { children, required, sublabel } = props;
 
   return (
-    <div className='flex'>
-      <div>
-        <div className='whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1'>
-          {label}
-          {required && (
-            <span className='relative align-text-top'>
-              <div className='absolute inline w-1.5 h-1.5 bg-secondary rounded-full ml-1' />
-            </span>
-          )}
-        </div>
-        <div className='text-xs text-grey-500'>{sublabel}</div>
+    <div>
+      <div className='whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1'>
+        {children}
+        {required && (
+          <span className='relative'>
+            <div className='absolute inline w-1.5 h-1.5 bg-secondary rounded-full ml-1' />
+          </span>
+        )}
       </div>
-      <div className='flex-1'>
-        <div className='w-full'>{children}</div>
-        <div
-          className={twMerge(
-            'text-xs leading-[.875rem] text-grey-500',
-            status === 'warning' && 'text-warning',
-            status === 'error' && 'text-error'
-          )}
-        >
-          {caption}
-        </div>
-      </div>
+      <div className='text-xs text-grey-500'>{sublabel}</div>
     </div>
   );
 };
-FormField.defaultProps = {
-  status: 'default',
-};
+
+const InputContainer = (props: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className='flex-1 [&>*]:w-full' {...props} />
+);
+
+interface StatusCaptionProps extends React.HTMLAttributes<HTMLDivElement> {
+  status?: 'default' | 'warning' | 'error';
+}
+const StatusCaption = ({
+  status,
+  children,
+  className,
+  ...rest
+}: StatusCaptionProps) => (
+  <div
+    className={twMerge(
+      'text-xs leading-[.875rem] text-grey-500',
+      status === 'warning' && 'text-warning',
+      status === 'error' && 'text-error',
+      className
+    )}
+    {...rest}
+  >
+    {children}
+  </div>
+);
+
+const FormField = (props: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className='flex' {...props} />
+);
+
+FormField.Label = FieldLabel;
+FormField.Container = InputContainer;
+FormField.Caption = StatusCaption;
 
 export default FormField;

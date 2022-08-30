@@ -30,9 +30,8 @@ export const Usecase: Story<TextareaProps> = args => {
           onChange={e => {
             setCase1(e.currentTarget.value);
           }}
-        >
-          {case1}
-        </Textarea>
+          value={case1}
+        />
       </div>
       <div className='mb-8'>
         <div className='font-bold'>scroll bar should not show</div>
@@ -40,9 +39,8 @@ export const Usecase: Story<TextareaProps> = args => {
           onChange={e => {
             setCase2(e.currentTarget.value);
           }}
-        >
-          {case2}
-        </Textarea>
+          value={case2}
+        />
       </div>
       <div className='mb-8'>
         <div className='font-bold'>should align</div>

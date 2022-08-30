@@ -40,7 +40,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       widthInCharLength,
       className,
       style,
-      children: propsValue,
+      value: propsValue,
       onChange,
       defaultValue,
       ...rest
@@ -111,10 +111,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           tabIndex={0}
           rows={1}
           onChange={handleChange}
+          value={isControlled ? propsValue : value}
           {...rest}
-        >
-          {isControlled ? propsValue : value}
-        </textarea>
+        />
       </InputHolder>
     );
   }
