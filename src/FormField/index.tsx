@@ -12,7 +12,7 @@ const FieldLabel = (props: FieldLabelProps) => {
 
   return (
     <div>
-      <div className='whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1'>
+      <div className='whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1 capitalize'>
         {children}
         {required && (
           <span className='relative'>
@@ -52,7 +52,7 @@ const StatusCaption = ({
 );
 
 const FormField = (props: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className='flex' {...props} />
+  <div className='sm:flex' {...props} />
 );
 
 FormField.Label = FieldLabel;
