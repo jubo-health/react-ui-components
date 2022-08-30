@@ -10,7 +10,9 @@ export default {
 } as Meta;
 
 export const PlayGround: Story<TextareaProps> = args => <Textarea {...args} />;
-PlayGround.args = {};
+PlayGround.args = {
+  placeholder: 'Textarea placeholder',
+};
 
 export const Usecase: Story<TextareaProps> = args => {
   const [case1, setCase1] = React.useState(
@@ -52,4 +54,3 @@ export const Usecase: Story<TextareaProps> = args => {
     </>
   );
 };
-PlayGround.args = {};

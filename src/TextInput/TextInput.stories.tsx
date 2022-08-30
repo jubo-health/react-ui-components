@@ -11,4 +11,6 @@ export default {
 export const PlayGround: Story<TextInputProps> = args => (
   <TextInput {...args} />
 );
-PlayGround.args = {};
+PlayGround.args = {
+  placeholder: 'TextInput placeholder',
+};
