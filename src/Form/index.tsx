@@ -10,6 +10,7 @@ import {
   FieldValues,
 } from 'react-hook-form';
 import FormField from '../FormField';
+import Textarea from '../Textarea';
 
 export interface FormProps
   extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
@@ -41,19 +42,20 @@ export type PropsOf<BasicElement = 'div'> =
     ? React.ComponentProps<BasicElement>
     : never;
 
-export type ComponentProps<BasicElement> = {
-  component?: BasicElement;
+export type AsProps<BasicElement> = {
+  as?: BasicElement;
 };
 
-const DEFAULT_BASE = 'input';
+const DEFAULT_BASE = Textarea;
 interface FieldOnlyProps
   extends Omit<React.ComponentProps<typeof FormField.Label>, 'children'> {
   name: string;
   label?: string;
+  caption?: string;
   onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
 }
-export type FieldProps<BaseElement> = ComponentProps<BaseElement> &
+export type FieldProps<BaseElement> = AsProps<BaseElement> &
   PropsOf<BaseElement> &
   FieldOnlyProps;
 
@@ -62,12 +64,13 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
 ) => {
   const {
     name,
-    component,
+    as,
     required,
     onChange,
     onBlur,
     label,
     sublabel,
+    caption,
     ...rest
   } = props;
   const { register } = useFormContext();
@@ -76,10 +79,10 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   return (
     <FormField>
       <FormField.Label sublabel={sublabel} required={required}>
-        {label}
+        {label || name}
       </FormField.Label>
       <FormField.Container>
-        {React.createElement(component, {
+        {React.createElement(as, {
           status: errors[name] ? 'error' : undefined,
           ...register(name, {
             validate: {
@@ -95,14 +98,14 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
           ...rest,
         })}
         <FormField.Caption status={errors[name] ? 'error' : 'default'}>
-          {errors[name]?.type === 'required' ? '請輸入必填欄位' : null}
+          {errors[name] ? errors[name]?.message || '請輸入必填欄位' : caption}
         </FormField.Caption>
       </FormField.Container>
     </FormField>
   );
 };
 Field.defaultProps = {
-  component: DEFAULT_BASE,
+  as: DEFAULT_BASE,
 };
 
 Form.Field = Field;

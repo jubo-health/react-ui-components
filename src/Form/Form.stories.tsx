@@ -1,6 +1,9 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+
 import Textarea from '../Textarea';
 import FormField from '../FormField';
 import Form, { FormProps } from './index';
@@ -17,8 +20,9 @@ export const PlayGround: Story<FormProps> = args => {
         console.log(a);
       }}
     >
-      <Form.Field label='test' name='test' component={Textarea} />
-      <Form.Field required label='test2' name='test2' component={Textarea} />
+      <Form.Field name='simplestCase' />
+      <Form.Field label='test' name='test' as={Textarea} />
+      <Form.Field required label='test2' name='test2' as={Textarea} />
       <button type='submit'>submit</button>
     </Form>
   );
@@ -26,11 +30,22 @@ export const PlayGround: Story<FormProps> = args => {
 PlayGround.args = {};
 
 export const ManualComposed: Story<FormProps> = args => {
+  const resolver = React.useMemo(
+    () =>
+      yupResolver(
+        yup.object({
+          multi1: yup.string().required(),
+          multi2: yup.string().required(),
+        })
+      ),
+    []
+  );
   return (
     <Form
       onSubmit={a => {
         console.log(a);
       }}
+      resolver={resolver}
     >
       {({ register, formState: { errors } }) => (
         <>
@@ -39,7 +54,7 @@ export const ManualComposed: Story<FormProps> = args => {
             <FormField.Container>
               <Textarea {...register('manual')} />
               {errors.manual ? (
-                <FormField.Caption>{errors.manual.type}</FormField.Caption>
+                <FormField.Caption>{errors.manual.message}</FormField.Caption>
               ) : null}
             </FormField.Container>
           </FormField>
@@ -47,9 +62,14 @@ export const ManualComposed: Story<FormProps> = args => {
             <FormField.Label>multiple</FormField.Label>
             <div className='flex-1 flex gap-2'>
               <FormField.Container>
-                <Textarea {...register('multi1')} />
+                <Textarea
+                  status={errors.multi1 ? 'error' : 'default'}
+                  {...register('multi1')}
+                />
                 {errors.multi1 ? (
-                  <FormField.Caption>{errors.multi1.type}</FormField.Caption>
+                  <FormField.Caption status='error'>
+                    {errors.multi1.message}
+                  </FormField.Caption>
                 ) : null}
               </FormField.Container>
               <FormField.Container>
@@ -59,13 +79,13 @@ export const ManualComposed: Story<FormProps> = args => {
                 />
                 {errors.multi2 ? (
                   <FormField.Caption status='error'>
-                    {errors.multi2.type}
+                    {errors.multi2.message}
                   </FormField.Caption>
                 ) : null}
               </FormField.Container>
             </div>
           </FormField>
-          <Form.Field label='test' name='test' component={Textarea} />
+          <Form.Field label='test' name='test' as={Textarea} />
           <button type='submit'>submit</button>
         </>
       )}
