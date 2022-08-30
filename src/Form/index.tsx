@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   useForm,
+  UseFormReturn,
   FormProvider,
   useFormContext,
   useFormState,
@@ -15,6 +16,7 @@ export interface FormProps
   resolver?: Resolver;
   onError?: any;
   onSubmit: SubmitHandler<FieldValues>;
+  children: React.ReactNode | ((methods: UseFormReturn) => React.ReactNode);
 }
 
 const Form = function Form(props: FormProps) {
@@ -26,7 +28,9 @@ const Form = function Form(props: FormProps) {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit, onError)}>{children}</form>
+      <form onSubmit={methods.handleSubmit(onSubmit, onError)}>
+        {typeof children === 'function' ? children(methods) : children}
+      </form>
     </FormProvider>
   );
 };
