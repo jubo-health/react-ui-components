@@ -10,6 +10,7 @@ import {
   FieldValues,
   RegisterOptions,
 } from 'react-hook-form';
+import { twMerge } from 'tailwind-merge';
 
 import Textarea from '../Textarea';
 import { PropsOf, AsProps } from '../types';
@@ -19,6 +20,7 @@ const DEFAULT_BASE = Textarea;
 
 interface FormRegisterProps extends RegisterOptions {
   name: string;
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -27,11 +29,13 @@ const FormRegisterContext = React.createContext<
 >({ name: '' });
 
 const FormRegister = (props: FormRegisterProps) => {
-  const { children, ...rest } = props;
+  const { className, children, ...rest } = props;
   const { current: value } = React.useRef(rest);
   return (
     <FormRegisterContext.Provider value={value}>
-      <div className='flex-1 [&>*]:w-full'>{children}</div>
+      <div className={twMerge('FormRegister flex-1 [&>*]:w-full', className)}>
+        {children}
+      </div>
     </FormRegisterContext.Provider>
   );
 };
@@ -63,12 +67,21 @@ function FieldInput<
   });
 }
 
-const ErrorCaption = ({ children }: { children?: React.ReactNode }) => {
+const ErrorCaption = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) => {
   const { name } = React.useContext(FormRegisterContext);
   const { errors } = useFormState();
 
   return (
-    <StatusCaption status='error'>
+    <StatusCaption
+      status='error'
+      className={twMerge('ErrorCaption', className)}
+    >
       {errors[name] ? errors[name]?.message || '請輸入必填欄位' : children}
     </StatusCaption>
   );
@@ -77,8 +90,11 @@ const ErrorCaption = ({ children }: { children?: React.ReactNode }) => {
 FormRegister.Input = FieldInput;
 FormRegister.ErrorCaption = ErrorCaption;
 
-const Container = (props: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className='sm:flex' {...props} />
+const Container = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={twMerge('sm:flex', className)} {...props} />
 );
 
 interface FieldLabelProps {
@@ -91,16 +107,18 @@ const FieldLabel = (props: FieldLabelProps) => {
   const { children, required, sublabel } = props;
 
   return (
-    <div>
-      <div className='whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1 capitalize'>
+    <div className='FieldLabel-wrapper'>
+      <div className='FieldLabel whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1 capitalize'>
         {children}
         {required && (
-          <span className='relative'>
+          <span className='FieldLabel-require relative'>
             <div className='absolute inline w-1.5 h-1.5 bg-secondary rounded-full ml-1' />
           </span>
         )}
       </div>
-      <div className='text-xs text-grey-500'>{sublabel}</div>
+      <div className='FieldLabel-sublabel text-xs text-grey-500'>
+        {sublabel}
+      </div>
     </div>
   );
 };
