@@ -43,6 +43,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       value: propsValue,
       onChange,
       defaultValue,
+      startAdornment,
+      endAdornment,
       ...rest
     } = props;
     const skeleton = React.useRef<HTMLDivElement>(null);
@@ -83,6 +85,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         style={style}
         status={status}
         size={size}
+        startAdornment={startAdornment}
+        endAdornment={endAdornment}
       >
         <div
           className={twMerge(

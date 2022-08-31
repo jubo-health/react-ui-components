@@ -30,9 +30,22 @@ export interface TextInputProps
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   (props, ref) => {
-    const { size, status, widthInCharLength, className, ...rest } = props;
+    const {
+      size,
+      status,
+      widthInCharLength,
+      className,
+      startAdornment,
+      endAdornment,
+      ...rest
+    } = props;
     return (
-      <InputHolder status={status} size={size}>
+      <InputHolder
+        status={status}
+        size={size}
+        startAdornment={startAdornment}
+        endAdornment={endAdornment}
+      >
         <input
           ref={ref}
           className={twMerge('outline-none bg-transparent', className)}
