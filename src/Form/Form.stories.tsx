@@ -5,7 +5,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
 import Textarea from '../Textarea';
-import FormField from '../FormField';
 import Form, { FormProps } from './index';
 
 export default {
@@ -47,48 +46,28 @@ export const ManualComposed: Story<FormProps> = args => {
       }}
       resolver={resolver}
     >
-      {({ register, formState: { errors } }) => (
-        <>
-          <FormField>
-            <FormField.Label>manual</FormField.Label>
-            <FormField.Container>
-              <Textarea {...register('manual')} />
-              {errors.manual ? (
-                <FormField.Caption>{errors.manual.message}</FormField.Caption>
-              ) : null}
-            </FormField.Container>
-          </FormField>
-          <FormField>
-            <FormField.Label>multiple</FormField.Label>
-            <div className='flex-1 flex gap-2'>
-              <FormField.Container>
-                <Textarea
-                  status={errors.multi1 ? 'error' : 'default'}
-                  {...register('multi1')}
-                />
-                {errors.multi1 ? (
-                  <FormField.Caption status='error'>
-                    {errors.multi1.message}
-                  </FormField.Caption>
-                ) : null}
-              </FormField.Container>
-              <FormField.Container>
-                <Textarea
-                  status={errors.multi2 ? 'error' : 'default'}
-                  {...register('multi2', { required: true })}
-                />
-                {errors.multi2 ? (
-                  <FormField.Caption status='error'>
-                    {errors.multi2.message}
-                  </FormField.Caption>
-                ) : null}
-              </FormField.Container>
-            </div>
-          </FormField>
-          <Form.Field label='test' name='test' as={Textarea} />
-          <button type='submit'>submit</button>
-        </>
-      )}
+      <Form.Container>
+        <Form.Label>manual</Form.Label>
+        <Form.Register name='manual'>
+          <Form.Register.Input />
+          <Form.Register.ErrorCaption />
+        </Form.Register>
+      </Form.Container>
+      <Form.Container>
+        <Form.Label>multiple</Form.Label>
+        <div className='flex-1 flex gap-2'>
+          <Form.Register name='multi1'>
+            <Form.Register.Input as={Textarea} />
+            <Form.Register.ErrorCaption />
+          </Form.Register>
+          <Form.Register name='multi2'>
+            <Form.Register.Input as={Textarea} />
+            <Form.Register.ErrorCaption />
+          </Form.Register>
+        </div>
+      </Form.Container>
+      <Form.Field label='test' name='test' as={Textarea} />
+      <button type='submit'>submit</button>
     </Form>
   );
 };
