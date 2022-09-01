@@ -1,5 +1,6 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
+import { action } from '@storybook/addon-actions';
 
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -14,11 +15,7 @@ export default {
 
 export const PlayGround: Story<FormProps> = args => {
   return (
-    <Form
-      onSubmit={a => {
-        console.log(a);
-      }}
-    >
+    <Form onSubmit={action('form submitted')}>
       <Form.Field name='simplestCase' />
       <Form.Field label='test' name='test' as={Textarea} />
       <Form.Field required label='test2' name='test2' as={Textarea} />
@@ -40,12 +37,7 @@ export const ManualComposed: Story<FormProps> = args => {
     []
   );
   return (
-    <Form
-      onSubmit={a => {
-        console.log(a);
-      }}
-      resolver={resolver}
-    >
+    <Form onSubmit={action('form submitted')} resolver={resolver}>
       <Form.Container>
         <Form.Label>manual</Form.Label>
         <Form.Register name='manual'>
