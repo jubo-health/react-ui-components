@@ -19,22 +19,24 @@ const FormButton = React.forwardRef<
 >((props, ref) => {
   const { name, size, children, className, ...rest } = props;
   return (
-    <div className='relative'>
+    <div className='relative w-1/2'>
       <input
         type='checkbox'
         id={name}
         name={name}
         value='Bike'
         className='peer hidden'
+        ref={ref}
         {...rest}
       />
       <CheckIcon className='fill-primary invisible pointer-events-none peer-checked:visible absolute m-2' />
+      <div className='absolute pointer-events-none border border-grey-700 peer-checked:border-primary w-full h-full' />
       <label
         htmlFor={name}
         className={twMerge(
-          'flex select-none w-1/2 rounded-sm border border-grey-700 text-grey-700',
+          'flex select-none rounded-sm w-full h-full',
           'text-lg leading-6 p-1',
-          'peer-checked:border-primary peer-checked:text-primary',
+          'text-grey-700 peer-checked:text-primary',
           className
         )}
       >
