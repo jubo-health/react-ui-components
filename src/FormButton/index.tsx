@@ -28,7 +28,7 @@ const FormButton = React.forwardRef<
         className='peer hidden'
         {...rest}
       />
-      <CheckIcon className='fill-primary invisible peer-checked:visible absolute m-2' />
+      <CheckIcon className='fill-primary invisible pointer-events-none peer-checked:visible absolute m-2' />
       <label
         htmlFor={name}
         className={twMerge(
