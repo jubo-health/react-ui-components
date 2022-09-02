@@ -13,4 +13,6 @@ export const PlayGround: Story<
 > = args => <FormButton {...args} />;
 PlayGround.args = {
   children: 'Click Me',
+  value: 'value',
+  type: 'checkbox',
 };
