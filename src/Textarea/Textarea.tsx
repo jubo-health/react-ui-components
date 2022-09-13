@@ -81,43 +81,45 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     return (
       <InputHolder
-        className='inline-grid h-auto'
+        className='h-auto w-40'
         style={style}
         status={status}
         size={size}
         startAdornment={startAdornment}
         endAdornment={endAdornment}
       >
-        <div
-          className={twMerge(
-            'whitespace-pre-wrap line-clamp-5 break-words invisible',
-            'row-span-full col-span-full leading-6',
-            className
-          )}
-          ref={skeleton}
-        >
-          {/* space is nessesary */}
-          {`${isControlled ? propsValue : value} `}
+        <div className='inline-grid h-auto flex-1'>
+          <div
+            className={twMerge(
+              'whitespace-pre-wrap line-clamp-5 break-words invisible',
+              'row-span-full col-span-full leading-6',
+              className
+            )}
+            ref={skeleton}
+          >
+            {/* space is nessesary */}
+            {`${isControlled ? propsValue : value} `}
+          </div>
+          <textarea
+            ref={ref}
+            className={twMerge(
+              'resize-none outline-none bg-transparent',
+              'row-span-full col-span-full leading-6',
+              showScrollbar ? 'overflow-y-auto' : 'overflow-hidden',
+              className
+            )}
+            style={style}
+            autoComplete='off'
+            autoCorrect='off'
+            autoCapitalize='off'
+            spellCheck='false'
+            tabIndex={0}
+            rows={1}
+            onChange={handleChange}
+            value={isControlled ? propsValue : value}
+            {...rest}
+          />
         </div>
-        <textarea
-          ref={ref}
-          className={twMerge(
-            'resize-none outline-none bg-transparent',
-            'row-span-full col-span-full leading-6',
-            showScrollbar ? 'overflow-y-auto' : 'overflow-hidden',
-            className
-          )}
-          style={style}
-          autoComplete='off'
-          autoCorrect='off'
-          autoCapitalize='off'
-          spellCheck='false'
-          tabIndex={0}
-          rows={1}
-          onChange={handleChange}
-          value={isControlled ? propsValue : value}
-          {...rest}
-        />
       </InputHolder>
     );
   }

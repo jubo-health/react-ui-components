@@ -18,15 +18,18 @@ const Popover = React.forwardRef<
 >((props, ref) => {
   const { size, className, ...rest } = props;
   return (
-    <div
-      className={twMerge(
-        'rounded-sm py-2 absolute bg-white z-50',
-        'shadow-[0_4px_5px_rgba(0,0,0,0.14),0_1px_10px_rgba(0,0,0,0.12),0_2px_4px_-1px_rgba(0,0,0,0.2)]',
-        className
-      )}
-      ref={ref}
-      {...rest}
-    />
+    <>
+      {/* <div className='fixed inset-0 bg-black' /> */}
+      <div
+        className={twMerge(
+          'rounded-sm py-2 absolute bg-white z-50',
+          'shadow-[0_4px_5px_rgba(0,0,0,0.14),0_1px_10px_rgba(0,0,0,0.12),0_2px_4px_-1px_rgba(0,0,0,0.2)]',
+          className
+        )}
+        ref={ref}
+        {...rest}
+      />
+    </>
   );
 });
 Popover.defaultProps = defaultProps;

@@ -14,4 +14,7 @@ export const PlayGround: Story<
   const externalRef = React.useRef<any>(null);
   return <AutoTextarea {...args} ref={externalRef} />;
 };
-PlayGround.args = { defaultOptions: ['opt', 'option', 'i am an option'] };
+PlayGround.args = {
+  defaultOptions: ['opt', 'option', 'i am an option'],
+  onFetch: async () => [],
+};
