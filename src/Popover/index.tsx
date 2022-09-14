@@ -24,6 +24,7 @@ const Popover = React.forwardRef<
         className={twMerge(
           'rounded-sm py-2 absolute bg-white z-50',
           'shadow-[0_4px_5px_rgba(0,0,0,0.14),0_1px_10px_rgba(0,0,0,0.12),0_2px_4px_-1px_rgba(0,0,0,0.2)]',
+          'overflow-x-auto',
           className
         )}
         ref={ref}
