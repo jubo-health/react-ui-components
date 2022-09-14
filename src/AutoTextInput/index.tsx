@@ -2,7 +2,7 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 
-import Textarea from '../Textarea';
+import TextInput from '../TextInput';
 import Popover from '../Popover';
 import Item from '../Item';
 import LoadingIcon from '../icons/LoadingIcon';
@@ -13,8 +13,8 @@ type InternalOption = {
   isDefault?: boolean;
   content: AcceptedOption;
 };
-export interface AutoTextareaProps
-  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> {
+export interface AutoTextInputProps
+  extends Omit<React.HTMLAttributes<HTMLInputElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
@@ -30,7 +30,7 @@ export interface AutoTextareaProps
 }
 
 const AutoTextFieldContext = React.createContext<
-  Required<Pick<AutoTextareaProps, 'onCreate' | 'onDelete' | 'onFetch'>>
+  Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>>
 >({
   onCreate: () => {},
   onDelete: () => {},
@@ -40,8 +40,8 @@ const AutoTextFieldContext = React.createContext<
 export const AutoTextFieldProvider = AutoTextFieldContext.Provider;
 
 const useAutoTextInput = function (
-  props: AutoTextareaProps
-): Required<Pick<AutoTextareaProps, 'onCreate' | 'onDelete' | 'onFetch'>> {
+  props: AutoTextInputProps
+): Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>> {
   const context = React.useContext(AutoTextFieldContext);
   return {
     onCreate: props.onCreate || context.onCreate,
@@ -50,13 +50,13 @@ const useAutoTextInput = function (
   };
 };
 
-const defaultProps = { size: 'lg' } as AutoTextareaProps;
+const defaultProps = { size: 'lg' } as AutoTextInputProps;
 
-const AutoTextarea = React.forwardRef(function AutoTextareaInner<
+const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   T = AcceptedOption
 >(
-  props: AutoTextareaProps & typeof defaultProps,
-  ref: React.ForwardedRef<HTMLTextAreaElement>
+  props: AutoTextInputProps & typeof defaultProps,
+  ref: React.ForwardedRef<HTMLInputElement>
 ) {
   const { size, defaultOptions, fieldName, name, className, ...rest } = props;
   const [value, setValue] = React.useState('');
@@ -142,7 +142,7 @@ const AutoTextarea = React.forwardRef(function AutoTextareaInner<
         }
       }}
     >
-      <Textarea
+      <TextInput
         ref={ref}
         value={value}
         onChange={event => {
@@ -209,6 +209,6 @@ const AutoTextarea = React.forwardRef(function AutoTextareaInner<
     </div>
   );
 });
-AutoTextarea.defaultProps = defaultProps;
+AutoTextInput.defaultProps = defaultProps;
 
-export default AutoTextarea;
+export default AutoTextInput;

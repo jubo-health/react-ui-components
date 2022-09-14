@@ -1,18 +1,18 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
-import AutoTextarea from './index';
+import AutoTextInput from './index';
 
 export default {
-  title: 'AutoTextarea',
-  component: AutoTextarea,
+  title: 'AutoTextInput',
+  component: AutoTextInput,
 } as Meta;
 
 export const PlayGround: Story<
-  React.ComponentProps<typeof AutoTextarea>
+  React.ComponentProps<typeof AutoTextInput>
 > = args => {
   const externalRef = React.useRef<any>(null);
-  return <AutoTextarea {...args} ref={externalRef} />;
+  return <AutoTextInput {...args} ref={externalRef} />;
 };
 PlayGround.args = {
   defaultOptions: [
