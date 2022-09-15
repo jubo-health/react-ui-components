@@ -2,7 +2,7 @@ import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
-import AutoTextInput, { AutoTextFieldProvider } from './index';
+import AutoTextInput from './index';
 
 export default {
   title: 'AutoTextInput',
@@ -12,9 +12,9 @@ export default {
 export const PlayGround: Story<
   React.ComponentProps<typeof AutoTextInput>
 > = args => {
-  return <AutoTextInput className='w-full' {...args} />;
+  return <AutoTextInput className='w-80' {...args} />;
 };
-let remoteOptions = ['ccc', 'ddd'];
+let remoteOptions = ['ccc', 'ddd', { value: 'test' }];
 PlayGround.args = {
   defaultOptions: [
     'opt',
@@ -23,13 +23,23 @@ PlayGround.args = {
     'longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglong',
   ],
   fieldName: 'name',
-  onCreate: (...params: any) => {
-    action(`create with params: ${params}`)();
+  onCreate: async (...params: any) => {
+    action('create')(params);
+    await new Promise(resolve => {
+      setTimeout(() => {
+        resolve('');
+      }, 1000);
+    });
     remoteOptions = [...remoteOptions, params[1]];
   },
-  onDelete: (...params: any) => {
-    action(`delete with params: ${params}`)();
+  onDelete: async (...params: any) => {
+    action('delete')(params);
     const index = remoteOptions.findIndex(option => option === params[1]);
+    await new Promise(resolve => {
+      setTimeout(() => {
+        resolve('');
+      }, 1000);
+    });
     remoteOptions =
       index !== -1
         ? remoteOptions.slice(0, index).concat(remoteOptions.slice(index + 1))

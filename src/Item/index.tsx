@@ -9,19 +9,21 @@ export interface ItemProps
    */
   size?: 'sm' | 'lg';
   checked?: boolean;
+  hovering?: boolean;
 }
 
 const defaultProps = { size: 'lg' } as ItemProps;
 
 const Item = React.forwardRef<HTMLDivElement, ItemProps & typeof defaultProps>(
   (props, ref) => {
-    const { size, className, checked, ...rest } = props;
+    const { size, className, checked, hovering, ...rest } = props;
     return (
       <div
         role='menuitem'
         tabIndex={0}
         className={twMerge(
-          'relative flex py-2 px-4 leading-[1.375rem] hover:bg-grey-100 hover:active:bg-grey-300 active:bg-grey-300 min-w-fit',
+          'relative flex py-2 px-4 leading-[1.375rem] active:bg-grey-300 min-w-fit',
+          hovering && 'bg-grey-100',
           checked && 'bg-grey-200 hover:bg-grey-300',
           className
         )}

@@ -27,16 +27,16 @@ export interface AutoTextInputProps
   value?: string;
   defaultValue?: string;
   onChange?: (state: string, event?: React.FormEvent<HTMLInputElement>) => void;
-  onCreate?: (name: string, value: string) => unknown;
-  onDelete?: (name: string, option: AcceptedOption) => unknown;
+  onCreate?: (name: string, value: string) => Promise<unknown>;
+  onDelete?: (name: string, option: AcceptedOption) => Promise<unknown>;
   onFetch?: (name: string) => Promise<AcceptedOption[]>;
 }
 
 const AutoTextFieldContext = React.createContext<
   Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>>
 >({
-  onCreate: () => {},
-  onDelete: () => {},
+  onCreate: async () => {},
+  onDelete: async () => {},
   onFetch: async () => [],
 });
 
@@ -47,6 +47,7 @@ const useAutoTextInput = function (
 ): Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>> {
   const context = React.useContext(AutoTextFieldContext);
   return {
+    ...props,
     onCreate: props.onCreate || context.onCreate,
     onDelete: props.onDelete || context.onDelete,
     onFetch: props.onFetch || context.onFetch,
@@ -68,8 +69,9 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     name,
     className,
     onChange,
-    ...rest
+    ...restProps
   } = props;
+
   const [value, setValue] = useControl<string>({
     defaultValue: '',
     onChange,
@@ -82,7 +84,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const [remoteOptions, setRemoteOptions] = React.useState<InternalOption[]>(
     []
   );
-  const { onFetch, onCreate, onDelete } = useAutoTextInput(props);
+  const { onFetch, onCreate, onDelete, ...rest } = useAutoTextInput(restProps);
   const urlName = fieldName || name || '';
 
   const options: InternalOption[] = React.useMemo(
@@ -138,15 +140,29 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const handleDelete =
     (id: string) => async (e: React.MouseEvent<SVGSVGElement>) => {
       e.stopPropagation();
+      setLoading(true);
       setRemoteOptions(prev => {
         const index = prev.findIndex(option => option.id === id);
         if (index > -1) {
-          onDelete(urlName, prev[index].content);
+          onDelete(urlName, prev[index].content).then(() => {
+            setLoading(false);
+          });
           return [...prev.slice(0, index).concat(prev.slice(index + 1))];
         }
         return prev;
       });
     };
+
+  const filteredOptions = React.useMemo(
+    () =>
+      simplifiedOptions.filter(
+        option => !value || option.value.includes(value)
+      ),
+    [simplifiedOptions, value]
+  );
+  const nextItemRef = React.useRef<HTMLDivElement>(null);
+  const lastItemRef = React.useRef<HTMLDivElement>(null);
+  const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
   return (
     <div
@@ -165,7 +181,27 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         }}
         onFocus={handleOpenMenu}
         onClick={handleOpenMenu}
-        onKeyDown={handleOpenMenu}
+        onKeyDown={e => {
+          switch (e.key.toLowerCase()) {
+            case 'enter':
+              setOpen(false);
+              if (hoveringIndex !== -1)
+                setValue(filteredOptions[hoveringIndex]?.value);
+              break;
+            case 'arrowdown':
+              setHoveringIndex(prev =>
+                prev === filteredOptions.length - 1 ? prev : prev + 1
+              );
+              nextItemRef.current?.scrollIntoView(false);
+              break;
+            case 'arrowup':
+              setHoveringIndex(prev => (prev === 0 ? 0 : prev - 1));
+              lastItemRef.current?.scrollIntoView();
+              break;
+            default:
+              handleOpenMenu();
+          }
+        }}
         endAdornment={
           <>
             {loading && <LoadingIcon />}
@@ -182,34 +218,44 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       />
       {open && (
         <Popover className='w-full max-h-48' tabIndex={0}>
-          {simplifiedOptions
-            .filter(option => !value || option.value.includes(value))
-            .map(option => {
-              return (
-                <Item
-                  key={option.id}
-                  checked={option.value === value}
-                  onClick={() => {
-                    setOpen(false);
-                    setValue(option.value);
-                  }}
-                >
-                  <div className='flex-1'>{option.value}</div>
-                  {!option.isDefault && (
-                    <XMarkIcon
-                      onClick={handleDelete(option.id)}
-                      className='p-0.5 w-6 h-6 text-grey-700 hover:bg-grey-300 rounded-full sticky right-4'
-                    />
-                  )}
-                </Item>
-              );
-            })}
+          {filteredOptions.map((option, index) => (
+            <Item
+              key={option.id}
+              checked={option.value === value}
+              onClick={() => {
+                setOpen(false);
+                setValue(option.value);
+              }}
+              onMouseEnter={() => {
+                setHoveringIndex(index);
+              }}
+              hovering={index === hoveringIndex}
+              ref={
+                index === hoveringIndex + 1
+                  ? nextItemRef
+                  : index === hoveringIndex - 1
+                  ? lastItemRef
+                  : undefined
+              }
+            >
+              <div className='flex-1'>{option.value}</div>
+              {!option.isDefault && (
+                <XMarkIcon
+                  onClick={handleDelete(option.id)}
+                  className='p-0.5 w-6 h-6 text-grey-700 hover:bg-grey-300 rounded-full sticky right-4'
+                />
+              )}
+            </Item>
+          ))}
           {value && !optionStrings.includes(value) && (
             <Item
               checked
               onClick={() => {
                 setOpen(false);
-                onCreate(urlName, value);
+                setLoading(true);
+                onCreate(urlName, value).then(() => {
+                  setLoading(false);
+                });
                 setRemoteOptions(prev => [
                   ...prev,
                   { id: `remote${prev.length}`, content: value },
