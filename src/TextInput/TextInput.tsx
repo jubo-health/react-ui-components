@@ -45,10 +45,11 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
         size={size}
         startAdornment={startAdornment}
         endAdornment={endAdornment}
+        className={className}
       >
         <input
           ref={ref}
-          className={twMerge('outline-none bg-transparent', className)}
+          className='outline-none bg-transparent flex-1 w-full'
           tabIndex={0}
           size={widthInCharLength}
           {...rest}

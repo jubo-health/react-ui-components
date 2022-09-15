@@ -6,6 +6,7 @@ import TextInput from '../TextInput';
 import Popover from '../Popover';
 import Item from '../Item';
 import LoadingIcon from '../icons/LoadingIcon';
+import useControl from '../hooks/useControl';
 
 type AcceptedOption = string | { [key: string]: string; value: string };
 type InternalOption = {
@@ -14,16 +15,18 @@ type InternalOption = {
   content: AcceptedOption;
 };
 export interface AutoTextInputProps
-  extends Omit<React.HTMLAttributes<HTMLInputElement>, 'size'> {
+  extends Omit<React.HTMLAttributes<HTMLInputElement>, 'size' | 'onChange'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
    */
   size?: 'sm' | 'lg';
-  defaultOptions: Array<AcceptedOption>;
+  defaultOptions?: Array<AcceptedOption>;
   fieldName?: string;
   name?: string;
   value?: string;
+  defaultValue?: string;
+  onChange?: (state: string, event?: React.FormEvent<HTMLInputElement>) => void;
   onCreate?: (name: string, value: string) => unknown;
   onDelete?: (name: string, option: AcceptedOption) => unknown;
   onFetch?: (name: string) => Promise<AcceptedOption[]>;
@@ -50,7 +53,7 @@ const useAutoTextInput = function (
   };
 };
 
-const defaultProps = { size: 'lg' } as AutoTextInputProps;
+const defaultProps = { size: 'lg', defaultOptions: [] } as AutoTextInputProps;
 
 const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   T = AcceptedOption
@@ -58,8 +61,20 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   props: AutoTextInputProps & typeof defaultProps,
   ref: React.ForwardedRef<HTMLInputElement>
 ) {
-  const { size, defaultOptions, fieldName, name, className, ...rest } = props;
-  const [value, setValue] = React.useState('');
+  const {
+    size,
+    defaultOptions,
+    fieldName,
+    name,
+    className,
+    onChange,
+    ...rest
+  } = props;
+  const [value, setValue] = useControl<string>({
+    defaultValue: '',
+    onChange,
+    ...props,
+  });
   const [open, setOpen] = React.useState(false);
 
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -105,7 +120,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const handleOpenMenu = React.useCallback(() => {
     setOpen(true);
     // FIXME: maybe this should be set by user by using cache or something else
-    if (!loaded.current) {
+    if (!loaded.current && !loading) {
       setLoading(true);
       onFetch(urlName).then((res: AcceptedOption[]) => {
         setRemoteOptions(
@@ -118,7 +133,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         loaded.current = true;
       });
     }
-  }, [onFetch, urlName]);
+  }, [onFetch, urlName, loading]);
 
   const handleDelete =
     (id: string) => async (e: React.MouseEvent<SVGSVGElement>) => {
@@ -146,7 +161,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         ref={ref}
         value={value}
         onChange={event => {
-          setValue(event.target.value);
+          setValue(event.target.value, event);
         }}
         onFocus={handleOpenMenu}
         onClick={handleOpenMenu}
@@ -158,11 +173,11 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               onClick={() => {
                 setValue('');
               }}
-              className='w-6 h-6 text-grey-700 hidden group-hover:block group-focus-within:block rounded-full hover:bg-grey-300'
+              className='p-1 w-6 h-6 text-grey-700 hidden group-hover:block group-focus-within:block rounded-full hover:bg-grey-300'
             />
           </>
         }
-        className={className}
+        className={twMerge('w-40', className)}
         {...rest}
       />
       {open && (
@@ -183,7 +198,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
                   {!option.isDefault && (
                     <XMarkIcon
                       onClick={handleDelete(option.id)}
-                      className='w-6 h-6 text-grey-700 hover:bg-grey-300 rounded-full sticky right-4'
+                      className='p-0.5 w-6 h-6 text-grey-700 hover:bg-grey-300 rounded-full sticky right-4'
                     />
                   )}
                 </Item>

@@ -11,7 +11,7 @@ const LoadingIcon = props => {
         cy='12'
         r='9'
         fill='none'
-        strokeWidth='2.5'
+        strokeWidth='2'
         strokeMiterlimit='10'
       />
     </svg>
