@@ -16,6 +16,10 @@ and demo with [storybook](https://storybook.js.org/)
 yarn add @jubo-health/react-ui-components
 ```
 
+```title=peerDependencies
+yarn add @tailwindcss/line-clamp react-hook-form
+```
+
 ```css title='tailwind.css'
 @layer utilities {
   input[type='number']::-webkit-inner-spin-button,
