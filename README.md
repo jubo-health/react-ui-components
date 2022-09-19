@@ -107,3 +107,21 @@ module.exports = {
   ],
 };
 ```
+
+## publish
+
+```
+npx np
+```
+
+or
+
+```
+yarn global add np
+```
+
+then
+
+```
+np
+```
