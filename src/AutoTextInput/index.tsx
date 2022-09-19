@@ -32,7 +32,7 @@ export interface AutoTextInputProps
   onFetch?: (name: string) => Promise<AcceptedOption[]>;
 }
 
-const AutoTextFieldContext = React.createContext<
+const AutoTextInputContext = React.createContext<
   Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>>
 >({
   onCreate: async () => {},
@@ -40,12 +40,12 @@ const AutoTextFieldContext = React.createContext<
   onFetch: async () => [],
 });
 
-export const AutoTextFieldProvider = AutoTextFieldContext.Provider;
+export const AutoTextInputProvider = AutoTextInputContext.Provider;
 
 const useAutoTextInput = function (
   props: AutoTextInputProps
 ): Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>> {
-  const context = React.useContext(AutoTextFieldContext);
+  const context = React.useContext(AutoTextInputContext);
   return {
     ...props,
     onCreate: props.onCreate || context.onCreate,
