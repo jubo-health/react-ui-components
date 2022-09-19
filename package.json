@@ -79,7 +79,8 @@
     "start": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "build": "rollup -c",
-    "publish": "npm run build"
+    "prepare": "yarn build",
+    "release": "np"
   },
   "description": "This library is aim to support the development of [jubo.health](https://www.jubo-health.com/) products, so pull requests and issues would probably be push aside.",
   "directories": {
@@ -93,5 +94,8 @@
   "bugs": {
     "url": "https://github.com/jubo-health/react-ui-components/issues"
   },
-  "homepage": "https://github.com/jubo-health/react-ui-components#readme"
+  "homepage": "https://github.com/jubo-health/react-ui-components#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
