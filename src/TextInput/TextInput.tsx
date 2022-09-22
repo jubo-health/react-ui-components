@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import InputHolder from '../InputHolder';
 
 export interface TextInputProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'size'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
@@ -54,18 +54,6 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
         startAdornment={startAdornment}
         endAdornment={endAdornment}
         className={className}
-        onCompositionStart={e => {
-          isComposing.current = true;
-          if (onCompositionStart) onCompositionStart(e);
-        }}
-        onCompositionEnd={e => {
-          isComposing.current = false;
-          if (onCompositionEnd) onCompositionEnd(e);
-        }}
-        onKeyDown={e => {
-          if (!isComposing.current && onKeyDown) onKeyDown(e);
-        }}
-        {...rest}
       >
         <input
           ref={ref}
@@ -74,6 +62,18 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
           size={widthInCharLength}
           value={value}
           onChange={onChange}
+          onCompositionStart={e => {
+            isComposing.current = true;
+            if (onCompositionStart) onCompositionStart(e);
+          }}
+          onCompositionEnd={e => {
+            isComposing.current = false;
+            if (onCompositionEnd) onCompositionEnd(e);
+          }}
+          onKeyDown={e => {
+            if (!isComposing.current && onKeyDown) onKeyDown(e);
+          }}
+          {...rest}
         />
       </InputHolder>
     );
