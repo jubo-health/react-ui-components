@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import InputHolder from '../InputHolder';
 
 export interface TextInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'size'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
@@ -26,6 +26,8 @@ export interface TextInputProps
    * input原生的屬性: size，以字元長度定義的寬度，但現版面多直接給定 rem-base or pixel-base 的寬度所以也不大建議使用
    */
   widthInCharLength?: number;
+  value?: React.InputHTMLAttributes<HTMLInputElement>['value'];
+  onChange?: React.InputHTMLAttributes<HTMLInputElement>['onChange'];
 }
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
@@ -37,8 +39,14 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
       className,
       startAdornment,
       endAdornment,
+      onKeyDown,
+      onCompositionStart,
+      onCompositionEnd,
+      value,
+      onChange,
       ...rest
     } = props;
+    const isComposing = React.useRef(false);
     return (
       <InputHolder
         status={status}
@@ -46,13 +54,26 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
         startAdornment={startAdornment}
         endAdornment={endAdornment}
         className={className}
+        onCompositionStart={e => {
+          isComposing.current = true;
+          if (onCompositionStart) onCompositionStart(e);
+        }}
+        onCompositionEnd={e => {
+          isComposing.current = false;
+          if (onCompositionEnd) onCompositionEnd(e);
+        }}
+        onKeyDown={e => {
+          if (!isComposing.current && onKeyDown) onKeyDown(e);
+        }}
+        {...rest}
       >
         <input
           ref={ref}
           className='outline-none bg-transparent flex-1 w-full'
           tabIndex={0}
           size={widthInCharLength}
-          {...rest}
+          value={value}
+          onChange={onChange}
         />
       </InputHolder>
     );
