@@ -292,7 +292,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               }}
               hovering={index === hoveringIndex}
             >
-              <div className='flex-1'>{option.value}</div>
+              <div className='flex-1 break-words w-0'>{option.value}</div>
               {!option.isDefault && (
                 <Button className='rounded-full sticky right-4'>
                   <XMarkIcon
