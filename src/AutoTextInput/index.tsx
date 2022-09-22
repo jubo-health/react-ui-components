@@ -2,11 +2,12 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 
-import TextInput from '../TextInput';
+import TextInput, { TextInputProps } from '../TextInput';
 import Popover from '../Popover';
 import Item from '../Item';
 import LoadingIcon from '../icons/LoadingIcon';
 import useControl from '../hooks/useControl';
+import Button from '../Button';
 
 type AcceptedOption = string | { [key: string]: string; value: string };
 type InternalOption = {
@@ -15,7 +16,7 @@ type InternalOption = {
   content: AcceptedOption;
 };
 export interface AutoTextInputProps
-  extends Omit<React.HTMLAttributes<HTMLInputElement>, 'size' | 'onChange'> {
+  extends Omit<TextInputProps, 'size' | 'onChange'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
@@ -81,6 +82,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const loaded = React.useRef(false);
+  const popoverRef = React.useRef<HTMLDivElement>(null);
   const [remoteOptions, setRemoteOptions] = React.useState<InternalOption[]>(
     []
   );
@@ -137,6 +139,26 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     }
   }, [onFetch, urlName, loading]);
 
+  const handleSelect = React.useCallback(
+    (v: string) => {
+      setOpen(false);
+      setValue(v);
+    },
+    [setValue]
+  );
+
+  const handleCreate = React.useCallback(() => {
+    setOpen(false);
+    setLoading(true);
+    onCreate(urlName, value).then(() => {
+      setLoading(false);
+    });
+    setRemoteOptions(prev => [
+      ...prev,
+      { id: `remote${prev.length}`, content: value },
+    ]);
+  }, [onCreate, urlName, value]);
+
   const handleDelete =
     (id: string) => async (e: React.MouseEvent<SVGSVGElement>) => {
       e.stopPropagation();
@@ -160,13 +182,14 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       ),
     [simplifiedOptions, value]
   );
-  const nextItemRef = React.useRef<HTMLDivElement>(null);
-  const lastItemRef = React.useRef<HTMLDivElement>(null);
   const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
+  const isCreatable = value && !optionStrings.includes(value);
+
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
-      className={twMerge('w-fit relative group', className)}
+      className={twMerge('w-40 relative group', className)}
       onBlur={e => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
           setOpen(false);
@@ -182,22 +205,58 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         onFocus={handleOpenMenu}
         onClick={handleOpenMenu}
         onKeyDown={e => {
-          switch (e.key.toLowerCase()) {
-            case 'enter':
-              setOpen(false);
-              if (hoveringIndex !== -1)
-                setValue(filteredOptions[hoveringIndex]?.value);
+          switch (e.key) {
+            case 'Enter':
+              if (hoveringIndex !== -1) {
+                e.preventDefault();
+                if (hoveringIndex === filteredOptions.length) {
+                  handleCreate();
+                } else {
+                  handleSelect(filteredOptions[hoveringIndex]?.value);
+                }
+              }
               break;
-            case 'arrowdown':
-              setHoveringIndex(prev =>
-                prev === filteredOptions.length - 1 ? prev : prev + 1
-              );
-              nextItemRef.current?.scrollIntoView(false);
+            case 'ArrowDown': {
+              const isLastOption = isCreatable
+                ? hoveringIndex === filteredOptions.length
+                : hoveringIndex === filteredOptions.length - 1;
+              const newIndex = isLastOption ? 0 : hoveringIndex + 1;
+              setHoveringIndex(newIndex);
+              const nextElement: HTMLDivElement | undefined | null =
+                popoverRef.current?.querySelector(
+                  `.${filteredOptions[newIndex]?.id || 'create-option'}`
+                );
+              if (popoverRef.current && nextElement) {
+                const scrollBottom =
+                  popoverRef.current.clientHeight +
+                  popoverRef.current.scrollTop;
+                const elementBottom =
+                  nextElement.offsetTop + nextElement.offsetHeight;
+                if (isLastOption) nextElement.scrollIntoView();
+                else if (elementBottom > scrollBottom)
+                  nextElement.scrollIntoView(isLastOption);
+              }
               break;
-            case 'arrowup':
-              setHoveringIndex(prev => (prev === 0 ? 0 : prev - 1));
-              lastItemRef.current?.scrollIntoView();
+            }
+            case 'ArrowUp': {
+              const isFirstOption = hoveringIndex === 0;
+              const newIndex = isFirstOption
+                ? isCreatable
+                  ? filteredOptions.length
+                  : filteredOptions.length - 1
+                : hoveringIndex - 1;
+              setHoveringIndex(newIndex);
+              const nextElement: HTMLDivElement | undefined | null =
+                popoverRef.current?.querySelector(
+                  `.${filteredOptions[newIndex]?.id || 'create-option'}`
+                );
+              if (popoverRef.current && nextElement) {
+                if (isFirstOption) nextElement.scrollIntoView(false);
+                else if (popoverRef.current.scrollTop > nextElement.offsetTop)
+                  nextElement.scrollIntoView();
+              }
               break;
+            }
             default:
               handleOpenMenu();
           }
@@ -205,62 +264,50 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         endAdornment={
           <>
             {loading && <LoadingIcon />}
-            <XMarkIcon
-              onClick={() => {
-                setValue('');
-              }}
-              className='p-1 w-6 h-6 text-grey-700 hidden group-hover:block group-focus-within:block rounded-full hover:bg-grey-300'
-            />
+            <Button className='hidden rounded-full group-hover:block group-focus-within:block'>
+              <XMarkIcon
+                onClick={() => {
+                  setValue('');
+                }}
+                className='w-4 h-4 text-grey-700'
+              />
+            </Button>
           </>
         }
-        className={twMerge('w-40', className)}
+        className='w-full'
         {...rest}
       />
       {open && (
-        <Popover className='w-full max-h-48' tabIndex={0}>
+        <Popover className='w-full max-h-48' tabIndex={0} ref={popoverRef}>
           {filteredOptions.map((option, index) => (
             <Item
               key={option.id}
+              className={option.id}
               checked={option.value === value}
               onClick={() => {
-                setOpen(false);
-                setValue(option.value);
+                handleSelect(option.value);
               }}
               onMouseEnter={() => {
                 setHoveringIndex(index);
               }}
               hovering={index === hoveringIndex}
-              ref={
-                index === hoveringIndex + 1
-                  ? nextItemRef
-                  : index === hoveringIndex - 1
-                  ? lastItemRef
-                  : undefined
-              }
             >
-              <div className='flex-1'>{option.value}</div>
+              <div className='flex-1 break-words w-0'>{option.value}</div>
               {!option.isDefault && (
-                <XMarkIcon
-                  onClick={handleDelete(option.id)}
-                  className='p-0.5 w-6 h-6 text-grey-700 hover:bg-grey-300 rounded-full sticky right-4'
-                />
+                <Button className='rounded-full sticky right-4'>
+                  <XMarkIcon
+                    onClick={handleDelete(option.id)}
+                    className='w-4 h-4'
+                  />
+                </Button>
               )}
             </Item>
           ))}
           {value && !optionStrings.includes(value) && (
             <Item
-              checked
-              onClick={() => {
-                setOpen(false);
-                setLoading(true);
-                onCreate(urlName, value).then(() => {
-                  setLoading(false);
-                });
-                setRemoteOptions(prev => [
-                  ...prev,
-                  { id: `remote${prev.length}`, content: value },
-                ]);
-              }}
+              className='create-option'
+              hovering={hoveringIndex === filteredOptions.length}
+              onClick={handleCreate}
             >
               新增 {value}
             </Item>
