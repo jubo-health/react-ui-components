@@ -2,11 +2,12 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 
-import TextInput from '../TextInput';
+import TextInput, { TextInputProps } from '../TextInput';
 import Popover from '../Popover';
 import Item from '../Item';
 import LoadingIcon from '../icons/LoadingIcon';
 import useControl from '../hooks/useControl';
+import Button from '../Button';
 
 type AcceptedOption = string | { [key: string]: string; value: string };
 type InternalOption = {
@@ -15,7 +16,7 @@ type InternalOption = {
   content: AcceptedOption;
 };
 export interface AutoTextInputProps
-  extends Omit<React.HTMLAttributes<HTMLInputElement>, 'size' | 'onChange'> {
+  extends Omit<TextInputProps, 'size' | 'onChange'> {
   /**
    * 文字與間距大小，通常表單內使用lg，表單外使用sm
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
@@ -166,7 +167,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
 
   return (
     <div
-      className={twMerge('w-fit relative group', className)}
+      className={twMerge('w-40 relative group', className)}
       onBlur={e => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
           setOpen(false);
@@ -205,15 +206,17 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         endAdornment={
           <>
             {loading && <LoadingIcon />}
-            <XMarkIcon
-              onClick={() => {
-                setValue('');
-              }}
-              className='p-1 w-6 h-6 text-grey-700 hidden group-hover:block group-focus-within:block rounded-full hover:bg-grey-300'
-            />
+            <Button className='hidden rounded-full group-hover:block group-focus-within:block'>
+              <XMarkIcon
+                onClick={() => {
+                  setValue('');
+                }}
+                className='w-4 h-4 text-grey-700'
+              />
+            </Button>
           </>
         }
-        className={twMerge('w-40', className)}
+        className='w-full'
         {...rest}
       />
       {open && (
@@ -240,10 +243,12 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
             >
               <div className='flex-1'>{option.value}</div>
               {!option.isDefault && (
-                <XMarkIcon
-                  onClick={handleDelete(option.id)}
-                  className='p-0.5 w-6 h-6 text-grey-700 hover:bg-grey-300 rounded-full sticky right-4'
-                />
+                <Button className='rounded-full sticky right-4'>
+                  <XMarkIcon
+                    onClick={handleDelete(option.id)}
+                    className='w-4 h-4'
+                  />
+                </Button>
               )}
             </Item>
           ))}
