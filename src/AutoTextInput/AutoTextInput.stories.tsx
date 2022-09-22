@@ -16,6 +16,7 @@ export const PlayGround: Story<
 };
 let remoteOptions = ['ccc', 'ddd', { value: 'test' }];
 PlayGround.args = {
+  placeholder: '請輸入文字',
   defaultOptions: [
     'opt',
     'option',
