@@ -185,6 +185,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
   const isCreatable = value && !optionStrings.includes(value);
+  const lastCursorPosition = React.useRef({ x: 0, y: 0 });
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
@@ -287,8 +288,17 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               onClick={() => {
                 handleSelect(option.value);
               }}
-              onMouseEnter={() => {
-                setHoveringIndex(index);
+              onMouseMove={e => {
+                if (
+                  hoveringIndex !== index &&
+                  (lastCursorPosition.current.x !== e.screenX ||
+                    lastCursorPosition.current.y !== e.screenY)
+                )
+                  setHoveringIndex(index);
+                lastCursorPosition.current = {
+                  x: e.screenX,
+                  y: e.screenY,
+                };
               }}
               hovering={index === hoveringIndex}
             >
