@@ -15,6 +15,7 @@ type InternalOption = {
   isDefault?: boolean;
   content: AcceptedOption;
 };
+
 export interface AutoTextInputProps
   extends Omit<TextInputProps, 'size' | 'onChange'> {
   /**
@@ -233,9 +234,11 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
                   popoverRef.current.scrollTop;
                 const elementBottom =
                   nextElement.offsetTop + nextElement.offsetHeight;
-                if (isLastOption) nextElement.scrollIntoView();
+                if (isLastOption)
+                  popoverRef.current.scrollTop = nextElement.offsetTop;
                 else if (elementBottom > scrollBottom)
-                  nextElement.scrollIntoView(isLastOption);
+                  popoverRef.current.scrollTop =
+                    elementBottom - popoverRef.current.clientHeight;
               }
               break;
             }
@@ -252,9 +255,13 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
                   `.${filteredOptions[newIndex]?.id || 'create-option'}`
                 );
               if (popoverRef.current && nextElement) {
-                if (isFirstOption) nextElement.scrollIntoView(false);
+                if (isFirstOption)
+                  popoverRef.current.scrollTop =
+                    nextElement.offsetTop +
+                    nextElement.offsetHeight -
+                    popoverRef.current.clientHeight;
                 else if (popoverRef.current.scrollTop > nextElement.offsetTop)
-                  nextElement.scrollIntoView();
+                  popoverRef.current.scrollTop = nextElement.offsetTop;
               }
               break;
             }
