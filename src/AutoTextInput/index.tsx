@@ -82,7 +82,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const [open, setOpen] = React.useState(false);
 
   const [loading, setLoading] = React.useState<boolean>(false);
-  const loaded = React.useRef(false);
   const popoverRef = React.useRef<HTMLDivElement>(null);
   const [remoteOptions, setRemoteOptions] = React.useState<InternalOption[]>(
     []
@@ -124,8 +123,10 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
 
   const handleOpenMenu = React.useCallback(() => {
     setOpen(true);
-    // FIXME: maybe this should be set by user by using cache or something else
-    if (!loaded.current && !loading) {
+  }, []);
+
+  React.useEffect(() => {
+    if (open) {
       setLoading(true);
       onFetch(urlName).then((res: AcceptedOption[]) => {
         setRemoteOptions(
@@ -135,10 +136,9 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
           }))
         );
         setLoading(false);
-        loaded.current = true;
       });
     }
-  }, [onFetch, urlName, loading]);
+  }, [open, onFetch, urlName]);
 
   const handleSelect = React.useCallback(
     (v: string) => {
