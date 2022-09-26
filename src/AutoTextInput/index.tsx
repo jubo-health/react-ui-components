@@ -71,6 +71,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     name,
     className,
     onChange,
+    onMouseEnter: propsOnMouseEnter,
+    onMouseLeave: propsOnMouseLeave,
     ...restProps
   } = props;
 
@@ -121,25 +123,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [options]
   );
 
-  const handleOpenMenu = React.useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  React.useEffect(() => {
-    if (open) {
-      setLoading(true);
-      onFetch(urlName).then((res: AcceptedOption[]) => {
-        setRemoteOptions(
-          res.map((option, index) => ({
-            id: `remote${index}`,
-            content: option,
-          }))
-        );
-        setLoading(false);
-      });
-    }
-  }, [open, onFetch, urlName]);
-
   const handleSelect = React.useCallback(
     (v: string) => {
       setOpen(false);
@@ -176,6 +159,47 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       });
     };
 
+  const updateRemoteOptions = React.useCallback(() => {
+    setLoading(true);
+    onFetch(urlName).then((res: AcceptedOption[]) => {
+      setRemoteOptions(
+        res.map((option, index) => ({
+          id: `remote${index}`,
+          content: option,
+        }))
+      );
+      setLoading(false);
+    });
+  }, [onFetch, urlName]);
+
+  const timeoutID = React.useRef<number>();
+  const handleMouseEnter = React.useCallback(
+    (e: React.MouseEvent<HTMLInputElement>) => {
+      if (propsOnMouseEnter) propsOnMouseEnter(e);
+      if (!timeoutID.current && !loading)
+        timeoutID.current = window.setTimeout(() => {
+          updateRemoteOptions();
+        }, 150);
+    },
+    [propsOnMouseEnter, loading, updateRemoteOptions]
+  );
+  const handleMouseLeave = React.useCallback(
+    (e: React.MouseEvent<HTMLInputElement>) => {
+      if (propsOnMouseLeave) propsOnMouseLeave(e);
+      if (timeoutID.current) clearTimeout(timeoutID.current);
+      timeoutID.current = undefined;
+    },
+    [propsOnMouseLeave]
+  );
+
+  const handleOpenMenu = React.useCallback(() => {
+    setOpen(true);
+    if (!timeoutID.current && !loading && !open)
+      timeoutID.current = window.setTimeout(() => {
+        updateRemoteOptions();
+      }, 150);
+  }, [loading, open, updateRemoteOptions]);
+
   const filteredOptions = React.useMemo(
     () =>
       simplifiedOptions.filter(
@@ -195,6 +219,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       onBlur={e => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
           setOpen(false);
+          timeoutID.current = undefined;
         }
       }}
     >
@@ -266,6 +291,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               break;
             }
             default:
+              // prevent refetch when typing
+              timeoutID.current = 9999;
               handleOpenMenu();
           }
         }}
@@ -282,6 +309,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
             </Button>
           </>
         }
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className='w-full'
         {...rest}
       />
