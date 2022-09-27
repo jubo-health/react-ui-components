@@ -1,6 +1,7 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { XMarkIcon } from '@heroicons/react/24/solid';
+import Fuse from 'fuse.js';
 
 import TextInput, { TextInputProps } from '../TextInput';
 import Popover from '../Popover';
@@ -15,6 +16,7 @@ type InternalOption = {
   isDefault?: boolean;
   content: AcceptedOption;
 };
+
 export interface AutoTextInputProps
   extends Omit<TextInputProps, 'size' | 'onChange'> {
   /**
@@ -70,6 +72,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     name,
     className,
     onChange,
+    onMouseEnter: propsOnMouseEnter,
+    onMouseLeave: propsOnMouseLeave,
     ...restProps
   } = props;
 
@@ -81,7 +85,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const [open, setOpen] = React.useState(false);
 
   const [loading, setLoading] = React.useState<boolean>(false);
-  const loaded = React.useRef(false);
   const popoverRef = React.useRef<HTMLDivElement>(null);
   const [remoteOptions, setRemoteOptions] = React.useState<InternalOption[]>(
     []
@@ -109,7 +112,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [options]
   );
 
-  const simplifiedOptions = React.useMemo(
+  const unifiedOptions = React.useMemo(
     () =>
       options.map(option => ({
         ...option,
@@ -120,24 +123,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       })),
     [options]
   );
-
-  const handleOpenMenu = React.useCallback(() => {
-    setOpen(true);
-    // FIXME: maybe this should be set by user by using cache or something else
-    if (!loaded.current && !loading) {
-      setLoading(true);
-      onFetch(urlName).then((res: AcceptedOption[]) => {
-        setRemoteOptions(
-          res.map((option, index) => ({
-            id: `remote${index}`,
-            content: option,
-          }))
-        );
-        setLoading(false);
-        loaded.current = true;
-      });
-    }
-  }, [onFetch, urlName, loading]);
 
   const handleSelect = React.useCallback(
     (v: string) => {
@@ -175,13 +160,52 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       });
     };
 
-  const filteredOptions = React.useMemo(
-    () =>
-      simplifiedOptions.filter(
-        option => !value || option.value.includes(value)
-      ),
-    [simplifiedOptions, value]
+  const updateRemoteOptions = React.useCallback(() => {
+    setLoading(true);
+    onFetch(urlName).then((res: AcceptedOption[]) => {
+      setRemoteOptions(
+        res.map((option, index) => ({
+          id: `remote${index}`,
+          content: option,
+        }))
+      );
+      setLoading(false);
+    });
+  }, [onFetch, urlName]);
+
+  const timeoutID = React.useRef<number>();
+  const handleMouseEnter = React.useCallback(
+    (e: React.MouseEvent<HTMLInputElement>) => {
+      if (propsOnMouseEnter) propsOnMouseEnter(e);
+      if (!timeoutID.current && !loading)
+        timeoutID.current = window.setTimeout(() => {
+          updateRemoteOptions();
+        }, 150);
+    },
+    [propsOnMouseEnter, loading, updateRemoteOptions]
   );
+  const handleMouseLeave = React.useCallback(
+    (e: React.MouseEvent<HTMLInputElement>) => {
+      if (propsOnMouseLeave) propsOnMouseLeave(e);
+      if (timeoutID.current) clearTimeout(timeoutID.current);
+      timeoutID.current = undefined;
+    },
+    [propsOnMouseLeave]
+  );
+
+  const handleOpenMenu = React.useCallback(() => {
+    setOpen(true);
+    if (!timeoutID.current && !loading && !open)
+      timeoutID.current = window.setTimeout(() => {
+        updateRemoteOptions();
+      }, 150);
+  }, [loading, open, updateRemoteOptions]);
+
+  const filteredOptions = React.useMemo(() => {
+    if (!value) return unifiedOptions;
+    const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
+    return fuse.search(value).map(d => d.item);
+  }, [unifiedOptions, value]);
   const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
   const isCreatable = value && !optionStrings.includes(value);
@@ -194,6 +218,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       onBlur={e => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
           setOpen(false);
+          timeoutID.current = undefined;
         }
       }}
     >
@@ -233,9 +258,11 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
                   popoverRef.current.scrollTop;
                 const elementBottom =
                   nextElement.offsetTop + nextElement.offsetHeight;
-                if (isLastOption) nextElement.scrollIntoView();
+                if (isLastOption)
+                  popoverRef.current.scrollTop = nextElement.offsetTop;
                 else if (elementBottom > scrollBottom)
-                  nextElement.scrollIntoView(isLastOption);
+                  popoverRef.current.scrollTop =
+                    elementBottom - popoverRef.current.clientHeight;
               }
               break;
             }
@@ -252,13 +279,19 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
                   `.${filteredOptions[newIndex]?.id || 'create-option'}`
                 );
               if (popoverRef.current && nextElement) {
-                if (isFirstOption) nextElement.scrollIntoView(false);
+                if (isFirstOption)
+                  popoverRef.current.scrollTop =
+                    nextElement.offsetTop +
+                    nextElement.offsetHeight -
+                    popoverRef.current.clientHeight;
                 else if (popoverRef.current.scrollTop > nextElement.offsetTop)
-                  nextElement.scrollIntoView();
+                  popoverRef.current.scrollTop = nextElement.offsetTop;
               }
               break;
             }
             default:
+              // prevent refetch when typing
+              timeoutID.current = 9999;
               handleOpenMenu();
           }
         }}
@@ -275,6 +308,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
             </Button>
           </>
         }
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className='w-full'
         {...rest}
       />

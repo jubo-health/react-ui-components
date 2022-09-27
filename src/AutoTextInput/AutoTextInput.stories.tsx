@@ -12,7 +12,12 @@ export default {
 export const PlayGround: Story<
   React.ComponentProps<typeof AutoTextInput>
 > = args => {
-  return <AutoTextInput className='w-80' {...args} />;
+  return (
+    <>
+      <AutoTextInput className='w-80' {...args} />
+      <div className='h-80 m-80' />
+    </>
+  );
 };
 let remoteOptions = ['ccc', 'ddd', { value: 'test' }];
 PlayGround.args = {
