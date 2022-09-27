@@ -1,6 +1,7 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { XMarkIcon } from '@heroicons/react/24/solid';
+import Fuse from 'fuse.js';
 
 import TextInput, { TextInputProps } from '../TextInput';
 import Popover from '../Popover';
@@ -111,7 +112,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [options]
   );
 
-  const simplifiedOptions = React.useMemo(
+  const unifiedOptions = React.useMemo(
     () =>
       options.map(option => ({
         ...option,
@@ -200,13 +201,11 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       }, 150);
   }, [loading, open, updateRemoteOptions]);
 
-  const filteredOptions = React.useMemo(
-    () =>
-      simplifiedOptions.filter(
-        option => !value || option.value.includes(value)
-      ),
-    [simplifiedOptions, value]
-  );
+  const filteredOptions = React.useMemo(() => {
+    if (!value) return unifiedOptions;
+    const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
+    return fuse.search(value).map(d => d.item);
+  }, [unifiedOptions, value]);
   const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
   const isCreatable = value && !optionStrings.includes(value);
