@@ -226,6 +226,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         ref={ref}
         name={name}
         value={value}
+        autoComplete='off'
         onChange={event => {
           setValue(event.target.value, event);
         }}
