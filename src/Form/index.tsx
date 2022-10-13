@@ -9,6 +9,7 @@ import {
   SubmitHandler,
   FieldValues,
   RegisterOptions,
+  useController,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
 
@@ -21,6 +22,7 @@ const DEFAULT_BASE = Textarea;
 interface FormRegisterProps extends RegisterOptions {
   name: string;
   className?: string;
+  required?: boolean;
   children: React.ReactNode;
 }
 
@@ -46,23 +48,29 @@ export type FieldInputProps<BaseElement> = AsProps<BaseElement> &
 function FieldInput<
   BaseElement extends React.ElementType = typeof DEFAULT_BASE
 >(props: FieldInputProps<BaseElement>) {
-  const { as, ...rest } = props;
+  const { as, defaultValue, ...rest } = props;
   const { name, required, ...options } = React.useContext(FormRegisterContext);
-  const { register } = useFormContext();
-  const { errors } = useFormState();
 
-  return React.createElement(as || DEFAULT_BASE, {
-    status: errors[name] ? 'error' : undefined,
-    ...register(name, {
-      ...options,
+  const { field } = useController({
+    name,
+    rules: {
+      // the callback return "true" indicate valid
       validate: {
         required: d =>
           !required ||
           (d && typeof d === 'object'
             ? Object.keys(d).length > 0
-            : d && d !== 0 && d !== false),
+            : Boolean(d) || d === 0 || d === false),
       },
-    }),
+    },
+    defaultValue,
+    ...options,
+  });
+  const { errors } = useFormState();
+
+  return React.createElement(as || DEFAULT_BASE, {
+    status: errors[name] ? 'error' : undefined,
+    ...field,
     ...rest,
   });
 }
@@ -155,7 +163,12 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
       <FieldLabel sublabel={sublabel} required={required}>
         {label || name}
       </FieldLabel>
-      <FormRegister name={name} onChange={onChange} onBlur={onBlur}>
+      <FormRegister
+        name={name}
+        onChange={onChange}
+        required={required}
+        onBlur={onBlur}
+      >
         <FormRegister.Input as={as} {...rest} />
         <FormRegister.ErrorCaption>{caption}</FormRegister.ErrorCaption>
       </FormRegister>

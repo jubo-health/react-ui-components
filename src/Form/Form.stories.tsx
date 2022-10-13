@@ -7,6 +7,7 @@ import * as yup from 'yup';
 
 import Textarea from '../Textarea';
 import Form, { FormProps } from './index';
+import AutoTextInput from '../AutoTextInput';
 
 export default {
   title: 'Form',
@@ -16,10 +17,28 @@ export default {
 export const PlayGround: Story<FormProps> = args => {
   return (
     <Form onSubmit={action('form submitted')}>
-      <Form.Field name='simplestCase' />
-      <Form.Field label='test' name='test' as={Textarea} />
-      <Form.Field required label='test2' name='test2' as={Textarea} />
-      <button type='submit'>submit</button>
+      {({ reset }) => (
+        <>
+          <Form.Field name='simplestCase' />
+          <Form.Field label='test' name='test' as={Textarea} />
+          <Form.Field required label='test2' name='test2' as={Textarea} />
+          <Form.Field
+            required
+            name='test3'
+            as={AutoTextInput}
+            defaultOptions={['aaaa', 'ahde']}
+          />
+          <button
+            type='button'
+            onClick={() => {
+              reset({ simplestCase: 'simple', test3: 'aaa' });
+            }}
+          >
+            reset
+          </button>
+          <button type='submit'>submit</button>
+        </>
+      )}
     </Form>
   );
 };
