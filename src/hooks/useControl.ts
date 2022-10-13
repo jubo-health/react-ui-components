@@ -15,7 +15,7 @@ function useControl<T>({
   const [value, setValue] = React.useState<T>(defaultValue);
 
   const onChange = React.useCallback(
-    (state, event) => {
+    (state: T, event) => {
       if (!isControlled) {
         setValue(state);
       }

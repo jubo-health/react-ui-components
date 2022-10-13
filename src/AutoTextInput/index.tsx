@@ -74,15 +74,16 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     onChange,
     onMouseEnter: propsOnMouseEnter,
     onMouseLeave: propsOnMouseLeave,
+    value: propsValue,
     ...restProps
   } = props;
 
+  const [open, setOpen] = React.useState(false);
   const [value, setValue] = useControl<string>({
     defaultValue: '',
+    value: propsValue,
     onChange,
-    ...props,
   });
-  const [open, setOpen] = React.useState(false);
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const popoverRef = React.useRef<HTMLDivElement>(null);
@@ -225,7 +226,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       <TextInput
         ref={ref}
         name={name}
-        value={value}
         autoComplete='off'
         onChange={event => {
           setValue(event.target.value, event);
@@ -314,6 +314,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         onMouseLeave={handleMouseLeave}
         className='w-full'
         {...rest}
+        value={value}
       />
       {open && (
         <Popover className='w-full max-h-48' tabIndex={0} ref={popoverRef}>
