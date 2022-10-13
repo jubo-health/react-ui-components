@@ -1,6 +1,7 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import { useForm } from 'react-hook-form';
 
 import AutoTextInput from './index';
 
@@ -62,7 +63,83 @@ PlayGround.args = {
   },
 };
 
+const Input = React.forwardRef<HTMLInputElement, any>((props, ref) => {
+  console.log('props', props);
+  const { name, onChange, onBlur } = props;
+  return (
+    <input
+      id='aaa'
+      ref={ref}
+      name={name}
+      onChange={onChange}
+      // onBlur={onBlur}
+      autoComplete='false'
+    />
+  );
+});
+
 export const Controlled = () => {
   const [value, setValue] = React.useState('');
-  return <AutoTextInput value={value} onChange={setValue} />;
+  const ref = React.useRef<HTMLInputElement>(null);
+  const { register, handleSubmit } = useForm();
+
+  return (
+    <form
+      onSubmit={handleSubmit(d => {
+        console.log(d);
+      })}
+    >
+      <button
+        type='button'
+        onClick={() => {
+          document.getElementById('aaa').value = 'newValue';
+        }}
+      >
+        set
+      </button>
+      <Input {...register('test')} />
+      <button type='submit'>submit</button>
+      <AutoTextInput
+        value={value}
+        onChange={e => {
+          console.log('onChange');
+          console.log('r', e);
+          setValue(e?.currentTarget.value || '');
+        }}
+        defaultOptions={['asdf', 'aa']}
+      />
+      <input
+        ref={ref}
+        value={value}
+        onChange={e => {
+          console.log('AAA Change', e);
+          setValue(e.target.value);
+        }}
+      />
+      <button
+        type='button'
+        onClick={() => {
+          const valueSetter = Object?.getOwnPropertyDescriptor(
+            ref.current,
+            'value'
+          ).set;
+          const prototype = Object.getPrototypeOf(ref.current);
+          const prototypeValueSetter = Object.getOwnPropertyDescriptor(
+            prototype,
+            'value'
+          ).set;
+
+          if (valueSetter && valueSetter !== prototypeValueSetter) {
+            prototypeValueSetter.call(ref.current, 'newValue');
+          } else {
+            valueSetter.call(ref.current, 'newValue');
+          }
+          setValue('newValue');
+          ref.current?.dispatchEvent(new Event('input', { bubbles: true }));
+        }}
+      >
+        SET VALUE
+      </button>
+    </form>
+  );
 };

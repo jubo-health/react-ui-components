@@ -125,6 +125,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [options]
   );
 
+  // const inputRef = React.useRef<HTMLInputElement>(null);
   const handleSelect = React.useCallback(
     (v: string) => {
       setOpen(false);
@@ -225,6 +226,11 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     >
       <TextInput
         ref={ref}
+        // ref={el => {
+        //   if (typeof ref === 'function') ref(el);
+        //   else if (ref) ref.current = el;
+        //   inputRef.current = el;
+        // }}
         name={name}
         autoComplete='off'
         onChange={event => {
