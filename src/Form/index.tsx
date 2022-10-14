@@ -2,8 +2,7 @@ import React from 'react';
 import {
   useForm,
   useFormContext,
-  useFormState,
-  UseFormReturn,
+  UseFormMethods,
   FormProvider,
   Resolver,
   SubmitHandler,
@@ -66,7 +65,7 @@ function FieldInput<
     defaultValue,
     ...options,
   });
-  const { errors } = useFormState();
+  const { errors } = useFormContext();
 
   return React.createElement(as || DEFAULT_BASE, {
     status: errors[name] ? 'error' : undefined,
@@ -83,7 +82,7 @@ const ErrorCaption = ({
   children?: React.ReactNode;
 }) => {
   const { name } = React.useContext(FormRegisterContext);
-  const { errors } = useFormState();
+  const { errors } = useFormContext();
 
   return (
     <StatusCaption
@@ -163,12 +162,7 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
       <FieldLabel sublabel={sublabel} required={required}>
         {label || name}
       </FieldLabel>
-      <FormRegister
-        name={name}
-        onChange={onChange}
-        required={required}
-        onBlur={onBlur}
-      >
+      <FormRegister name={name} required={required}>
         <FormRegister.Input as={as} {...rest} />
         <FormRegister.ErrorCaption>{caption}</FormRegister.ErrorCaption>
       </FormRegister>
@@ -181,7 +175,7 @@ export interface FormProps
   resolver?: Resolver;
   onError?: any;
   onSubmit: SubmitHandler<FieldValues>;
-  children: React.ReactNode | ((methods: UseFormReturn) => React.ReactNode);
+  children: React.ReactNode | ((methods: UseFormMethods) => React.ReactNode);
 }
 
 const Form = function Form(props: FormProps) {
