@@ -8,6 +8,7 @@ import { yupResolver } from '@hookform/resolvers';
 import * as yup from 'yup';
 
 import Textarea from '../Textarea';
+import TextInput from '../TextInput';
 import Form, { FormProps } from './index';
 import AutoTextInput from '../AutoTextInput';
 
@@ -16,46 +17,16 @@ export default {
   component: Form,
 } as Meta;
 
-export const PlayGround: Story<FormProps> = args => {
-  return (
-    <Form onSubmit={action('form submitted')}>
-      {({ reset }) => (
-        <>
-          <Form.Field name='simplestCase' />
-          <Form.Field label='test' name='test' as={Textarea} />
-          <Form.Field required label='test2' name='test2' as={Textarea} />
-          <Form.Field
-            required
-            name='test3'
-            as={AutoTextInput}
-            defaultOptions={['aaaa', 'ahde']}
-          />
-          <button
-            type='button'
-            onClick={() => {
-              reset({ simplestCase: 'simple', test3: 'aaa' });
-            }}
-          >
-            reset
-          </button>
-          <button type='submit'>submit</button>
-        </>
-      )}
-    </Form>
-  );
-};
-PlayGround.args = {};
-
-export const TestingSubmission: Story<FormProps> = args => {
+export const Basic: Story<FormProps> = args => {
   const [result, setResult] = React.useState('');
-  const handleSubmit = d => {
+  const handleSubmit = (d: any) => {
     setResult(JSON.stringify(d));
   };
   return (
     <Form onSubmit={handleSubmit}>
       {({ reset }) => (
         <>
-          <Form.Field name='reset' />
+          <Form.Field data-testid='default' name='default' />
           <Form.Field
             data-testid='required'
             required
@@ -63,17 +34,23 @@ export const TestingSubmission: Story<FormProps> = args => {
             as={Textarea}
           />
           <Form.Field
+            data-testid='autoTextInput'
             required
             name='autoTextInput'
             as={AutoTextInput}
             defaultOptions={['aaaa', 'ahde']}
           />
+          <Form.Field name='textInput' as={TextInput} />
           <button
             className='mr-4'
             type='button'
             data-testid='reset'
             onClick={() => {
-              reset({ reset: 'default', autoTextInput: 'aaa' });
+              reset({
+                default: 'default',
+                autoTextInput: 'aaa',
+                textInput: 'textInput',
+              });
             }}
           >
             reset
@@ -85,23 +62,23 @@ export const TestingSubmission: Story<FormProps> = args => {
     </Form>
   );
 };
-TestingSubmission.play = async ({ canvasElement }) => {
+Basic.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   await userEvent.click(canvas.getByText('reset', { selector: 'button' }));
-  await expect(
-    canvas.getByText('default', { selector: 'textarea' })
-  ).toBeInTheDocument();
-  await expect(
-    canvas.getByText('aaa', { selector: 'input' })
-  ).toBeInTheDocument();
+  await new Promise(r => {
+    setTimeout(r, 0); // 要等才會過 why?
+  });
+  await expect(canvas.getByDisplayValue('textInput')).toBeInTheDocument();
+  await expect(canvas.getByDisplayValue('default')).toBeInTheDocument();
+  await expect(canvas.getByDisplayValue('aaa')).toBeInTheDocument();
 
   await userEvent.type(canvas.getByTestId('required'), 'required');
 
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
   await expect(
     await canvas.findByText(
-      '{"reset":"default","autoTextInput":"aaa","required":"required"}'
+      '{"textInput":"textInput","default":"default","required":"required","autoTextInput":"aaa"}'
     )
   ).toBeInTheDocument();
 };

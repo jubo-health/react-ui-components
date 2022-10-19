@@ -40,7 +40,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       widthInCharLength,
       className,
       style,
-      value: propsValue,
+      value,
       onChange,
       defaultValue,
       startAdornment,
@@ -48,10 +48,10 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       ...rest
     } = props;
     const skeleton = React.useRef<HTMLDivElement>(null);
-    const { current: isControlled } = React.useRef(
-      typeof propsValue !== 'undefined'
-    );
-    const [value, setValue] = React.useState(defaultValue ?? '');
+    // const { current: isControlled } = React.useRef(
+    //   typeof propsValue !== 'undefined'
+    // );
+    // const [value, setValue] = React.useState(defaultValue ?? '');
 
     // for the mismatch of scrollbar auto judgements
     // between skeleton and textarea
@@ -72,7 +72,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     const handleChange = React.useCallback(
       e => {
-        setValue(e.currentTarget.value);
+        // setValue(e.currentTarget.value);
         reviseScrollbar();
         if (onChange) onChange(e);
       },
@@ -98,7 +98,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             ref={skeleton}
           >
             {/* space is nessesary */}
-            {`${isControlled ? propsValue : value} `}
+            {/* {`${isControlled ? propsValue : value} `} */}
+            {`${value} `}
           </div>
           <textarea
             ref={ref}
@@ -116,7 +117,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             tabIndex={0}
             rows={1}
             onChange={handleChange}
-            value={isControlled ? propsValue : value}
+            // value={isControlled ? propsValue : value}
+            value={value}
             {...rest}
           />
         </div>
@@ -130,5 +132,8 @@ type DefaultProps = {
   status: 'default';
 };
 Textarea.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
+const TextareaAssigned = Object.assign(Textarea, {
+  // registrable: true,
+});
 
-export default Textarea;
+export default TextareaAssigned;

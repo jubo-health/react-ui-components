@@ -27,7 +27,7 @@ export interface AutoTextInputProps
   defaultOptions?: Array<AcceptedOption>;
   fieldName?: string;
   name?: string;
-  value?: string;
+  value: string;
   defaultValue?: string;
   onChange?: (state: string, event?: React.FormEvent<HTMLInputElement>) => void;
   onCreate?: (name: string, value: string) => Promise<unknown>;
@@ -46,7 +46,7 @@ const AutoTextInputContext = React.createContext<
 export const AutoTextInputProvider = AutoTextInputContext.Provider;
 
 const useAutoTextInput = function (
-  props: AutoTextInputProps
+  props: Omit<AutoTextInputProps, 'value'>
 ): Required<Pick<AutoTextInputProps, 'onCreate' | 'onDelete' | 'onFetch'>> {
   const context = React.useContext(AutoTextInputContext);
   return {
@@ -57,7 +57,11 @@ const useAutoTextInput = function (
   };
 };
 
-const defaultProps = { size: 'lg', defaultOptions: [] } as AutoTextInputProps;
+const defaultProps = {
+  size: 'lg',
+  defaultOptions: [],
+  value: '',
+} as AutoTextInputProps;
 
 const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   T = AcceptedOption
@@ -74,16 +78,16 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     onChange,
     onMouseEnter: propsOnMouseEnter,
     onMouseLeave: propsOnMouseLeave,
-    value: propsValue,
+    value,
     ...restProps
   } = props;
 
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = useControl<string>({
-    defaultValue: '',
-    value: propsValue,
-    onChange,
-  });
+  // const [value, setValue] = useControl<string>({
+  //   defaultValue: '',
+  //   value: propsValue,
+  //   onChange,
+  // });
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const popoverRef = React.useRef<HTMLDivElement>(null);
@@ -125,13 +129,10 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [options]
   );
 
-  const handleSelect = React.useCallback(
-    (v: string) => {
-      setOpen(false);
-      setValue(v);
-    },
-    [setValue]
-  );
+  const handleSelect = React.useCallback((v: string) => {
+    setOpen(false);
+    // setValue(v);
+  }, []);
 
   const handleCreate = React.useCallback(() => {
     setOpen(false);
@@ -228,7 +229,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         name={name}
         autoComplete='off'
         onChange={event => {
-          setValue(event.target.value, event);
+          // setValue(event.target.value, event);
+          if (onChange) onChange(event.target.value, event);
         }}
         onFocus={handleOpenMenu}
         onClick={handleOpenMenu}
@@ -303,7 +305,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
             <Button className='hidden rounded-full group-hover:block group-focus-within:block'>
               <XMarkIcon
                 onClick={() => {
-                  setValue('');
+                  if (onChange) onChange('');
                 }}
                 className='w-4 h-4 text-grey-700'
               />

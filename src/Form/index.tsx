@@ -8,7 +8,7 @@ import {
   SubmitHandler,
   FieldValues,
   RegisterOptions,
-  useController,
+  Controller,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
 
@@ -50,28 +50,41 @@ function FieldInput<
   const { as, defaultValue, ...rest } = props;
   const { name, required, ...options } = React.useContext(FormRegisterContext);
 
-  const { field } = useController({
-    name,
-    rules: {
-      // the callback return "true" indicate valid
-      validate: {
-        required: d =>
-          !required ||
-          (d && typeof d === 'object'
-            ? Object.keys(d).length > 0
-            : Boolean(d) || d === 0 || d === false),
-      },
-    },
-    defaultValue,
-    ...options,
-  });
+  const { register } = useFormContext();
+
+  // the callback return "true" indicate valid
+  const validate = {
+    required: (d: any) =>
+      !required ||
+      (d && typeof d === 'object'
+        ? Object.keys(d).length > 0
+        : Boolean(d) || d === 0 || d === false),
+  };
   const { errors } = useFormContext();
 
-  return React.createElement(as || DEFAULT_BASE, {
-    status: errors[name] ? 'error' : undefined,
-    ...field,
-    ...rest,
-  });
+  const component = as || DEFAULT_BASE;
+  console.log('component.registrable', component.registrable);
+  return component.registrable ? (
+    React.createElement(component, {
+      ...rest,
+      status: errors[name] ? 'error' : undefined,
+      name,
+      ref: register({ validate }),
+    })
+  ) : (
+    <Controller
+      name={name}
+      defaultValue={defaultValue}
+      render={({ ...params }) =>
+        React.createElement(component, {
+          status: errors[name] ? 'error' : undefined,
+          defaultValue,
+          ...rest,
+          ...params,
+        })
+      }
+    />
+  );
 }
 
 const ErrorCaption = ({
@@ -139,7 +152,7 @@ interface FieldOnlyProps
   onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
 }
 export type FieldProps<BaseElement> = AsProps<BaseElement> &
-  PropsOf<BaseElement> &
+  Omit<PropsOf<BaseElement>, 'value'> &
   FieldOnlyProps;
 
 const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
