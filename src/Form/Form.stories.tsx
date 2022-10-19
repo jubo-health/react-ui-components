@@ -1,6 +1,8 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import { within, screen, userEvent } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
 
 import { yupResolver } from '@hookform/resolvers';
 import * as yup from 'yup';
@@ -43,6 +45,66 @@ export const PlayGround: Story<FormProps> = args => {
   );
 };
 PlayGround.args = {};
+
+export const TestingSubmission: Story<FormProps> = args => {
+  const [result, setResult] = React.useState('');
+  const handleSubmit = d => {
+    setResult(JSON.stringify(d));
+  };
+  return (
+    <Form onSubmit={handleSubmit}>
+      {({ reset }) => (
+        <>
+          <Form.Field name='reset' />
+          <Form.Field
+            data-testid='required'
+            required
+            name='required'
+            as={Textarea}
+          />
+          <Form.Field
+            required
+            name='autoTextInput'
+            as={AutoTextInput}
+            defaultOptions={['aaaa', 'ahde']}
+          />
+          <button
+            className='mr-4'
+            type='button'
+            data-testid='reset'
+            onClick={() => {
+              reset({ reset: 'default', autoTextInput: 'aaa' });
+            }}
+          >
+            reset
+          </button>
+          <button type='submit'>submit</button>
+          <div>{result}</div>
+        </>
+      )}
+    </Form>
+  );
+};
+TestingSubmission.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  await userEvent.click(canvas.getByText('reset', { selector: 'button' }));
+  await expect(
+    canvas.getByText('default', { selector: 'textarea' })
+  ).toBeInTheDocument();
+  await expect(
+    canvas.getByText('aaa', { selector: 'input' })
+  ).toBeInTheDocument();
+
+  await userEvent.type(canvas.getByTestId('required'), 'required');
+
+  await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
+  await expect(
+    await canvas.findByText(
+      '{"reset":"default","autoTextInput":"aaa","required":"required"}'
+    )
+  ).toBeInTheDocument();
+};
 
 export const ManualComposed: Story<FormProps> = args => {
   const resolver = React.useMemo(
