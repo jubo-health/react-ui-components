@@ -42,7 +42,7 @@ const FormRegister = (props: FormRegisterProps) => {
 };
 
 export type FieldInputProps<BaseElement> = AsProps<BaseElement> &
-  PropsOf<BaseElement>;
+  Omit<PropsOf<BaseElement>, 'value'>;
 
 function FieldInput<
   BaseElement extends React.ElementType = typeof DEFAULT_BASE
@@ -53,28 +53,37 @@ function FieldInput<
   const { register } = useFormContext();
 
   // the callback return "true" indicate valid
-  const validate = {
-    required: (d: any) =>
-      !required ||
-      (d && typeof d === 'object'
-        ? Object.keys(d).length > 0
-        : Boolean(d) || d === 0 || d === false),
-  };
+  const rules = React.useMemo(
+    () => ({
+      validate: {
+        required: (d: any) =>
+          !required ||
+          (d && typeof d === 'object'
+            ? Object.keys(d).length > 0
+            : Boolean(d) || d === 0 || d === false),
+      },
+    }),
+    [required]
+  );
   const { errors } = useFormContext();
 
   const component = as || DEFAULT_BASE;
-  console.log('component.registrable', component.registrable);
-  return component.registrable ? (
+  return (
+    component as typeof component & {
+      registrable?: boolean;
+    }
+  ).registrable ? (
     React.createElement(component, {
       ...rest,
       status: errors[name] ? 'error' : undefined,
       name,
-      ref: register({ validate }),
+      ref: register(rules),
     })
   ) : (
     <Controller
       name={name}
       defaultValue={defaultValue}
+      rules={rules}
       render={({ ...params }) =>
         React.createElement(component, {
           status: errors[name] ? 'error' : undefined,
@@ -176,7 +185,7 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         {label || name}
       </FieldLabel>
       <FormRegister name={name} required={required}>
-        <FormRegister.Input as={as} {...rest} />
+        <FormRegister.Input as={as} {...(rest as PropsOf<BaseElement>)} />
         <FormRegister.ErrorCaption>{caption}</FormRegister.ErrorCaption>
       </FormRegister>
     </Container>

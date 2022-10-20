@@ -12,6 +12,11 @@ import TextInput from '../TextInput';
 import Form, { FormProps } from './index';
 import AutoTextInput from '../AutoTextInput';
 
+const halt = (duration = 0) =>
+  new Promise(r => {
+    setTimeout(r, duration); // 要等才會過 why?
+  });
+
 export default {
   title: 'Form',
   component: Form,
@@ -66,9 +71,10 @@ Basic.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   await userEvent.click(canvas.getByText('reset', { selector: 'button' }));
-  await new Promise(r => {
-    setTimeout(r, 0); // 要等才會過 why?
-  });
+  await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
+  await halt();
+  await expect(canvas.getByText('請輸入必填欄位')).toBeInTheDocument();
+
   await expect(canvas.getByDisplayValue('textInput')).toBeInTheDocument();
   await expect(canvas.getByDisplayValue('default')).toBeInTheDocument();
   await expect(canvas.getByDisplayValue('aaa')).toBeInTheDocument();
