@@ -8,6 +8,7 @@ export interface NewComponentProps
    * (需注意此屬性與原生的重複，原生的size更名為widthInCharLength)
    */
   size?: 'sm' | 'lg';
+  value: string;
 }
 
 const defaultProps = { size: 'lg' } as NewComponentProps;

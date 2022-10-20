@@ -85,5 +85,8 @@ type DefaultProps = {
   status: 'default';
 };
 TextInput.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
+const TextInputAssigned = Object.assign(TextInput, {
+  registrable: true,
+});
 
-export default TextInput;
+export default TextInputAssigned;
