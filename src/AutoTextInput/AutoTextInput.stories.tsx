@@ -1,8 +1,11 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import { within, userEvent } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
 
 import AutoTextInput from './index';
+import { halt } from '../storyUtils';
 
 export default {
   title: 'AutoTextInput',
@@ -12,14 +15,21 @@ export default {
 export const PlayGround: Story<
   React.ComponentProps<typeof AutoTextInput>
 > = args => {
+  const [value, setValue] = React.useState('');
   return (
     <>
-      <AutoTextInput className='w-80' {...args} />
+      <AutoTextInput
+        data-testid='auto-text-input'
+        className='w-80'
+        {...args}
+        value={value}
+        onChange={setValue}
+      />
       <div className='h-80 m-80' />
     </>
   );
 };
-let remoteOptions = ['ccc', 'ddd', { value: 'test' }];
+let remoteOptions = ['ccc', 'dad', 'ddd', { value: 'test' }];
 PlayGround.args = {
   placeholder: '請輸入文字',
   defaultOptions: [
@@ -61,8 +71,31 @@ PlayGround.args = {
     return remoteOptions;
   },
 };
+PlayGround.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(canvas.getByTestId('auto-text-input'));
+  await expect(await canvas.findByText('option')).toBeInTheDocument();
+  await halt(1100);
+  await userEvent.keyboard('d');
+  await halt(300);
+  await userEvent.keyboard('[ArrowDown]');
+  await halt();
+  await userEvent.keyboard('[Enter]');
+  await halt(100);
+  await expect(canvas.getByDisplayValue('ddd')).toBeInTheDocument();
+  await userEvent.click(await canvas.findByRole('button'));
+};
 
-export const Controlled = () => {
+export const LongList = () => {
   const [value, setValue] = React.useState('');
-  return <AutoTextInput value={value} onChange={setValue} />;
+  const options = React.useMemo(
+    () =>
+      Array(20000)
+        .fill('')
+        .map(() => (Math.random() + 1).toString(36).substring(7)),
+    []
+  );
+  return (
+    <AutoTextInput value={value} onChange={setValue} defaultOptions={options} />
+  );
 };
