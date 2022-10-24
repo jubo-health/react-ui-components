@@ -1,6 +1,6 @@
 {
   "name": "@jubo-health/react-ui-components",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "license": "MIT",
   "main": "lib/index.js",
   "module": "lib/index.esm.js",
