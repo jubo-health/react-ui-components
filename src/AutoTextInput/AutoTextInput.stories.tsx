@@ -77,7 +77,7 @@ PlayGround.play = async ({ canvasElement }) => {
   await expect(await canvas.findByText('option')).toBeInTheDocument();
   await halt(1100);
   await userEvent.keyboard('d');
-  await halt(200);
+  await halt(300);
   await userEvent.keyboard('[ArrowDown]');
   await halt();
   await userEvent.keyboard('[Enter]');

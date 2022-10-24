@@ -220,7 +220,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         v => {
           setFilterValue(v);
         },
-        100,
+        200,
         { leading: true }
       ),
     []
@@ -228,7 +228,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   const filteredOptions = React.useMemo(() => {
     if (!filterValue) return unifiedOptions;
     const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
-    return fuse.search(filterValue).map(d => d.item);
+    return fuse.search(filterValue.slice(0, 30)).map(d => d.item);
   }, [unifiedOptions, filterValue]);
 
   const [displayLength, setDisplayLength] = React.useState(20);
