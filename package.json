@@ -64,6 +64,7 @@
     "@headlessui/react": "^1.7.0",
     "@tailwindcss/line-clamp": "^0.4.0",
     "fuse.js": "^6.6.2",
+    "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-hook-form": "6",
@@ -75,6 +76,7 @@
     "@hookform/resolvers": "^0.1.0",
     "clsx": "^1.1.1",
     "fuse.js": "^6.6.2",
+    "lodash": "^4.17.21",
     "react-hook-form": "6",
     "tailwind-merge": "^1.5.1",
     "yup": "^0.32.11"

@@ -2,6 +2,7 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 import Fuse from 'fuse.js';
+import debounce from 'lodash/debounce';
 
 import TextInput, { TextInputProps } from '../TextInput';
 import Popover from '../Popover';
@@ -203,18 +204,47 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       }, 150);
   }, [loading, open, updateRemoteOptions]);
 
-  const filteredOptions = React.useMemo(() => {
-    if (!value) return unifiedOptions;
-    const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
-    return fuse.search(value).map(d => d.item);
-  }, [unifiedOptions, value]);
   const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
   const isCreatable = value && !optionStrings.includes(value);
   const lastCursorPosition = React.useRef({ x: 0, y: 0 });
 
+  const [filterValue, setFilterValue] = React.useState('');
+  const handleChangeFilter = React.useMemo(
+    () =>
+      debounce(
+        v => {
+          setFilterValue(v);
+        },
+        100,
+        { leading: true }
+      ),
+    []
+  );
+  const filteredOptions = React.useMemo(() => {
+    if (!filterValue) return unifiedOptions;
+    const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
+    return fuse.search(filterValue).map(d => d.item);
+  }, [unifiedOptions, filterValue]);
+  const [displayLength, setDisplayLength] = React.useState(20);
+  const inViewRef = React.useRef<HTMLDivElement>(null);
+  const isPreviousInView = React.useRef(false);
+  React.useEffect(() => {
+    if (!inViewRef.current || !open) return () => {};
+    const observer = new IntersectionObserver(entries => {
+      const isInView = entries.some(entry => entry.isIntersecting);
+      if (isInView && !isPreviousInView.current) {
+        setDisplayLength(prev => prev + 20);
+      }
+      isPreviousInView.current = isInView;
+    });
+    observer.observe(inViewRef.current);
+    return () => {
+      observer.disconnect();
+    };
+  }, [open, displayLength]); // displayLength in requried to update ref
+
   return (
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className={twMerge('w-40 relative group', className)}
       onBlur={e => {
@@ -231,6 +261,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         onChange={event => {
           // setValue(event.target.value, event);
           if (onChange) onChange(event.target.value, event);
+          handleChangeFilter(event.target.value);
         }}
         onFocus={handleOpenMenu}
         onClick={handleOpenMenu}
@@ -320,8 +351,9 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       />
       {open && (
         <Popover className='w-full max-h-48' tabIndex={0} ref={popoverRef}>
-          {filteredOptions.map((option, index) => (
+          {filteredOptions.slice(0, displayLength).map((option, index) => (
             <Item
+              ref={index === displayLength - 1 ? inViewRef : undefined}
               key={option.id}
               className={option.id}
               checked={option.value === value}

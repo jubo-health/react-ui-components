@@ -66,3 +66,17 @@ export const Controlled = () => {
   const [value, setValue] = React.useState('');
   return <AutoTextInput value={value} onChange={setValue} />;
 };
+
+export const LongList = () => {
+  const [value, setValue] = React.useState('');
+  const options = React.useMemo(
+    () =>
+      Array(20000)
+        .fill('')
+        .map(() => (Math.random() + 1).toString(36).substring(7)),
+    []
+  );
+  return (
+    <AutoTextInput value={value} onChange={setValue} defaultOptions={options} />
+  );
+};
