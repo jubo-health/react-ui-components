@@ -1,7 +1,7 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import { within, screen, userEvent } from '@storybook/testing-library';
+import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
 import { yupResolver } from '@hookform/resolvers';
@@ -11,11 +11,7 @@ import Textarea from '../Textarea';
 import TextInput from '../TextInput';
 import Form, { FormProps } from './index';
 import AutoTextInput from '../AutoTextInput';
-
-const halt = (duration = 0) =>
-  new Promise(r => {
-    setTimeout(r, duration); // 要等才會過 why?
-  });
+import { halt } from '../storyUtils';
 
 export default {
   title: 'Form',

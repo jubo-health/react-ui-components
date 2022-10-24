@@ -130,10 +130,14 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [options]
   );
 
-  const handleSelect = React.useCallback((v: string) => {
-    setOpen(false);
-    // setValue(v);
-  }, []);
+  const handleSelect = React.useCallback(
+    (v: string) => {
+      setOpen(false);
+      if (onChange) onChange(v);
+      // setValue(v);
+    },
+    [onChange]
+  );
 
   const handleCreate = React.useCallback(() => {
     setOpen(false);
@@ -226,6 +230,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
     return fuse.search(filterValue).map(d => d.item);
   }, [unifiedOptions, filterValue]);
+
   const [displayLength, setDisplayLength] = React.useState(20);
   const inViewRef = React.useRef<HTMLDivElement>(null);
   const isPreviousInView = React.useRef(false);
@@ -333,13 +338,14 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         endAdornment={
           <>
             {loading && <LoadingIcon />}
-            <Button className='hidden rounded-full group-hover:block group-focus-within:block'>
-              <XMarkIcon
-                onClick={() => {
-                  if (onChange) onChange('');
-                }}
-                className='w-4 h-4 text-grey-700'
-              />
+            <Button
+              className='hidden rounded-full group-hover:block group-focus-within:block'
+              onClick={() => {
+                if (onChange) onChange('');
+                handleChangeFilter('');
+              }}
+            >
+              <XMarkIcon className='w-4 h-4 text-grey-700' />
             </Button>
           </>
         }
