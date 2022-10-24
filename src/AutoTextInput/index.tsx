@@ -64,6 +64,7 @@ const defaultProps = {
   value: '',
 } as AutoTextInputProps;
 
+const virtualizeSize = 20;
 const AutoTextInput = React.forwardRef(function AutoTextInputInner<
   T = AcceptedOption
 >(
@@ -231,7 +232,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     return fuse.search(filterValue.slice(0, 30)).map(d => d.item);
   }, [unifiedOptions, filterValue]);
 
-  const [displayLength, setDisplayLength] = React.useState(20);
+  const [displayLength, setDisplayLength] = React.useState(virtualizeSize);
   const inViewRef = React.useRef<HTMLDivElement>(null);
   const isPreviousInView = React.useRef(false);
   React.useEffect(() => {
@@ -239,7 +240,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     const observer = new IntersectionObserver(entries => {
       const isInView = entries.some(entry => entry.isIntersecting);
       if (isInView && !isPreviousInView.current) {
-        setDisplayLength(prev => prev + 20);
+        setDisplayLength(prev => prev + virtualizeSize);
       }
       isPreviousInView.current = isInView;
     });
@@ -247,7 +248,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     return () => {
       observer.disconnect();
     };
-  }, [open, displayLength]); // displayLength in requried to update ref
+  }, [open, displayLength, filteredOptions.length]); // displayLength in requried to update ref
 
   return (
     <div
@@ -265,6 +266,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
         autoComplete='off'
         onChange={event => {
           // setValue(event.target.value, event);
+          setDisplayLength(virtualizeSize);
+          setHoveringIndex(0);
           if (onChange) onChange(event.target.value, event);
           handleChangeFilter(event.target.value);
         }}
@@ -342,6 +345,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               className='hidden rounded-full group-hover:block group-focus-within:block'
               onClick={() => {
                 if (onChange) onChange('');
+                setDisplayLength(virtualizeSize);
                 handleChangeFilter('');
               }}
             >
