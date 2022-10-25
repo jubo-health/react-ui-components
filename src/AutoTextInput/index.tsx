@@ -220,6 +220,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       debounce(
         v => {
           setFilterValue(v);
+          if (popoverRef.current) popoverRef.current.scrollTop = 0;
         },
         200,
         { leading: true }
