@@ -3,14 +3,93 @@ import { Story, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
+import { reduxForm, Field, reducer as formReducer } from 'redux-form';
+import { createStore, combineReducers } from 'redux';
+import { Provider } from 'react-redux';
 
 import AutoTextInput from './index';
+import TextInput from '../TextInput';
 import { halt } from '../storyUtils';
+
+const rootReducer = combineReducers({
+  // ...your other reducers here
+  // you have to pass formReducer under 'form' key,
+  // for custom keys look up the docs for 'getFormState'
+  form: formReducer,
+});
+
+const store = createStore(rootReducer);
 
 export default {
   title: 'AutoTextInput',
   component: AutoTextInput,
 } as Meta;
+
+const Component = ({
+  input: { name, onChange, value, ...inputProps },
+  className,
+  onChange: propsOnChange,
+  ...rest
+}) => {
+  return (
+    <AutoTextInput
+      name={name}
+      value={value}
+      onChange={v => {
+        console.log('redux onChange', v);
+        onChange(v);
+      }}
+    />
+  );
+};
+
+const Input = ({
+  input: { name, onChange, value, ...inputProps },
+  className,
+  onChange: propsOnChange,
+  ...rest
+}) => {
+  return (
+    <TextInput
+      name={name}
+      className='w-full'
+      value={value}
+      onChange={v => {
+        console.log('redux onChange', v);
+        onChange(v);
+        if (propsOnChange) {
+          propsOnChange(v);
+        }
+      }}
+      {...inputProps}
+      {...rest}
+    />
+  );
+};
+
+const Form = reduxForm({
+  form: 'ServiceRecord',
+})(props => {
+  const [value, setValue] = React.useState('');
+  return (
+    <form>
+      <Component input={{ value, onChange: setValue }} />
+      <Field name='test' component={Component} />
+      <Field name='test2' component={Input} />
+    </form>
+  );
+});
+
+export const Develop: Story<
+  React.ComponentProps<typeof AutoTextInput>
+> = args => {
+  const [value, setValue] = React.useState('');
+  return (
+    <Provider store={store}>
+      <Form />
+    </Provider>
+  );
+};
 
 export const PlayGround: Story<
   React.ComponentProps<typeof AutoTextInput>
