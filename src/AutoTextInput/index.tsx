@@ -111,26 +111,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     [defaultOptions, remoteOptions]
   );
 
-  const optionStrings = React.useMemo(
-    () =>
-      options.map(o =>
-        typeof o.content === 'string' ? o.content : o.content.value
-      ),
-    [options]
-  );
-
-  const unifiedOptions = React.useMemo(
-    () =>
-      options.map(option => ({
-        ...option,
-        value:
-          typeof option.content === 'string'
-            ? option.content
-            : option.content.value,
-      })),
-    [options]
-  );
-
   const handleSelect = React.useCallback(
     (v: string) => {
       setOpen(false);
@@ -211,7 +191,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
 
   const [hoveringIndex, setHoveringIndex] = React.useState<number>(0);
 
-  const isCreatable = value && !optionStrings.includes(value);
   const lastCursorPosition = React.useRef({ x: 0, y: 0 });
 
   const [filterValue, setFilterValue] = React.useState('');
@@ -227,10 +206,34 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       ),
     []
   );
-  const filteredOptions = React.useMemo(() => {
-    if (!filterValue) return unifiedOptions;
-    const fuse = new Fuse(unifiedOptions, { distance: 50, keys: ['value'] });
-    return fuse.search(filterValue.slice(0, 30)).map(d => d.item);
+
+  // to filter
+  const unifiedOptions = React.useMemo(
+    () =>
+      options.map(option => ({
+        id: option.id,
+        isDefault: option.isDefault,
+        value:
+          typeof option.content === 'string'
+            ? option.content
+            : option.content.value,
+      })),
+    [options]
+  );
+
+  const filteredOptions: Array<{
+    item: typeof unifiedOptions[0];
+    score?: number;
+  }> = React.useMemo(() => {
+    if (!filterValue) return unifiedOptions.map(option => ({ item: option }));
+    const fuse = new Fuse(unifiedOptions, {
+      distance: 50,
+      keys: ['value'],
+      includeScore: true,
+    });
+    // only find parts of value to avoid lag causing by long value
+    const searchResult = fuse.search(filterValue.slice(0, 30));
+    return searchResult;
   }, [unifiedOptions, filterValue]);
 
   const [displayLength, setDisplayLength] = React.useState(virtualizeSize);
@@ -250,6 +253,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
       observer.disconnect();
     };
   }, [open, displayLength, filteredOptions.length]); // displayLength in requried to update ref
+
+  const isCreatable = value && filteredOptions[0]?.score === 0;
 
   return (
     <div
@@ -282,7 +287,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
                 if (hoveringIndex === filteredOptions.length) {
                   handleCreate();
                 } else {
-                  handleSelect(filteredOptions[hoveringIndex]?.value);
+                  handleSelect(filteredOptions[hoveringIndex]?.item.value);
                 }
               }
               break;
@@ -294,7 +299,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               setHoveringIndex(newIndex);
               const nextElement: HTMLDivElement | undefined | null =
                 popoverRef.current?.querySelector(
-                  `.${filteredOptions[newIndex]?.id || 'create-option'}`
+                  `.${filteredOptions[newIndex]?.item.id || 'create-option'}`
                 );
               if (popoverRef.current && nextElement) {
                 const scrollBottom =
@@ -320,7 +325,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               setHoveringIndex(newIndex);
               const nextElement: HTMLDivElement | undefined | null =
                 popoverRef.current?.querySelector(
-                  `.${filteredOptions[newIndex]?.id || 'create-option'}`
+                  `.${filteredOptions[newIndex]?.item.id || 'create-option'}`
                 );
               if (popoverRef.current && nextElement) {
                 if (isFirstOption)
@@ -365,11 +370,11 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
           {filteredOptions.slice(0, displayLength).map((option, index) => (
             <Item
               ref={index === displayLength - 1 ? inViewRef : undefined}
-              key={option.id}
-              className={option.id}
-              checked={option.value === value}
+              key={option.item.id}
+              className={option.item.id}
+              checked={option.item.value === value}
               onClick={() => {
-                handleSelect(option.value);
+                handleSelect(option.item.value);
               }}
               onMouseMove={e => {
                 if (
@@ -385,18 +390,18 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               }}
               hovering={index === hoveringIndex}
             >
-              <div className='flex-1 break-words w-0'>{option.value}</div>
-              {!option.isDefault && (
+              <div className='flex-1 break-words w-0'>{option.item.value}</div>
+              {!option.item.isDefault && (
                 <Button className='rounded-full sticky right-4'>
                   <XMarkIcon
-                    onClick={handleDelete(option.id)}
+                    onClick={handleDelete(option.item.id)}
                     className='w-4 h-4'
                   />
                 </Button>
               )}
             </Item>
           ))}
-          {value && !optionStrings.includes(value) && (
+          {isCreatable && (
             <Item
               className='create-option'
               hovering={hoveringIndex === filteredOptions.length}
