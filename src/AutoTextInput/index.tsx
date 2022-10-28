@@ -193,20 +193,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
 
   const lastCursorPosition = React.useRef({ x: 0, y: 0 });
 
-  const [filterValue, setFilterValue] = React.useState('');
-  const handleChangeFilter = React.useMemo(
-    () =>
-      debounce(
-        v => {
-          setFilterValue(v);
-          if (popoverRef.current) popoverRef.current.scrollTop = 0;
-        },
-        200,
-        { leading: true }
-      ),
-    []
-  );
-
   // to filter
   const unifiedOptions = React.useMemo(
     () =>
@@ -225,16 +211,16 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     item: typeof unifiedOptions[0];
     score?: number;
   }> = React.useMemo(() => {
-    if (!filterValue) return unifiedOptions.map(option => ({ item: option }));
+    if (!value) return unifiedOptions.map(option => ({ item: option }));
     const fuse = new Fuse(unifiedOptions, {
       distance: 50,
       keys: ['value'],
       includeScore: true,
     });
     // only find parts of value to avoid lag causing by long value
-    const searchResult = fuse.search(filterValue.slice(0, 30));
+    const searchResult = fuse.search(value.slice(0, 30), { limit: 20 });
     return searchResult;
-  }, [unifiedOptions, filterValue]);
+  }, [unifiedOptions, value]);
 
   const [displayLength, setDisplayLength] = React.useState(virtualizeSize);
   const inViewRef = React.useRef<HTMLDivElement>(null);
@@ -254,8 +240,7 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     };
   }, [open, displayLength, filteredOptions.length]); // displayLength in requried to update ref
 
-  const isCreatable = value && filteredOptions[0]?.score === 0;
-
+  const isCreatable = value && filteredOptions[0]?.item.value !== value;
   return (
     <div
       className={twMerge('w-40 relative group', className)}
@@ -275,7 +260,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
           setDisplayLength(virtualizeSize);
           setHoveringIndex(0);
           if (onChange) onChange(event.target.value, event);
-          handleChangeFilter(event.target.value);
         }}
         onFocus={handleOpenMenu}
         onClick={handleOpenMenu}
@@ -352,7 +336,6 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
               onClick={() => {
                 if (onChange) onChange('');
                 setDisplayLength(virtualizeSize);
-                handleChangeFilter('');
               }}
             >
               <XMarkIcon className='w-4 h-4 text-grey-700' />
