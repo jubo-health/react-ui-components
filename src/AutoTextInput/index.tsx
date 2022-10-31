@@ -212,14 +212,27 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     score?: number;
   }> = React.useMemo(() => {
     if (!value) return unifiedOptions.map(option => ({ item: option }));
-    const fuse = new Fuse(unifiedOptions, {
-      distance: 50,
+
+    const exact: Array<{ item: typeof unifiedOptions[0] }> = [];
+    const notExact: typeof unifiedOptions = [];
+    unifiedOptions.forEach(opt => {
+      if (
+        opt.value.slice(0, value.length).toLowerCase() === value.toLowerCase()
+      )
+        exact.push({ item: opt });
+      else notExact.push(opt);
+    });
+    if (exact.length > 19) return exact.slice(0, 20);
+    const fuse = new Fuse(notExact, {
       keys: ['value'],
       includeScore: true,
+      ignoreLocation: true,
     });
     // only find parts of value to avoid lag causing by long value
-    const searchResult = fuse.search(value.slice(0, 30), { limit: 20 });
-    return searchResult;
+    const searchResult = fuse.search(value.slice(0, 30), {
+      limit: 20 - exact.length,
+    });
+    return exact.concat(searchResult);
   }, [unifiedOptions, value]);
 
   const [displayLength, setDisplayLength] = React.useState(virtualizeSize);

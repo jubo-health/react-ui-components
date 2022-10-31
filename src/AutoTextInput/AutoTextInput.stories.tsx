@@ -6,6 +6,7 @@ import { expect } from '@storybook/jest';
 
 import AutoTextInput from './index';
 import { halt } from '../storyUtils';
+import { defaultOptions, fetchOptions } from './data';
 
 export default {
   title: 'AutoTextInput',
@@ -88,14 +89,13 @@ PlayGround.play = async ({ canvasElement }) => {
 
 export const LongList = () => {
   const [value, setValue] = React.useState('');
-  const options = React.useMemo(
-    () =>
-      Array(20000)
-        .fill('')
-        .map(() => (Math.random() + 1).toString(36).substring(7)),
-    []
-  );
   return (
-    <AutoTextInput value={value} onChange={setValue} defaultOptions={options} />
+    <AutoTextInput
+      value={value}
+      onChange={setValue}
+      defaultOptions={defaultOptions}
+      onFetch={async () => fetchOptions}
+      className='w-full'
+    />
   );
 };
