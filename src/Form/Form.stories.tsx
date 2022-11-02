@@ -7,63 +7,62 @@ import { expect } from '@storybook/jest';
 import { yupResolver } from '@hookform/resolvers';
 import * as yup from 'yup';
 
+import { useForm } from 'react-hook-form';
 import Textarea from '../Textarea';
 import TextInput from '../TextInput';
 import Form, { FormProps } from './index';
 import AutoTextInput from '../AutoTextInput';
 import { halt } from '../storyUtils';
+import Label from '../Label';
 
 export default {
   title: 'Form',
   component: Form,
 } as Meta;
 
-export const Basic: Story<FormProps> = args => {
+export const CompleteForm: Story<FormProps> = args => {
+  const methods = useForm({ mode: 'onBlur' });
   const [result, setResult] = React.useState('');
   const handleSubmit = (d: any) => {
     setResult(JSON.stringify(d));
   };
   return (
-    <Form onSubmit={handleSubmit}>
-      {({ reset }) => (
-        <>
-          <Form.Field data-testid='default' name='default' />
-          <Form.Field
-            data-testid='required'
-            required
-            name='required'
-            as={Textarea}
-          />
-          <Form.Field
-            data-testid='autoTextInput'
-            required
-            name='autoTextInput'
-            as={AutoTextInput}
-            defaultOptions={['aaaa', 'ahde']}
-          />
-          <Form.Field name='textInput' as={TextInput} />
-          <button
-            className='mr-4'
-            type='button'
-            data-testid='reset'
-            onClick={() => {
-              reset({
-                default: 'default',
-                autoTextInput: 'aaa',
-                textInput: 'textInput',
-              });
-            }}
-          >
-            reset
-          </button>
-          <button type='submit'>submit</button>
-          <div>{result}</div>
-        </>
-      )}
+    <Form {...methods} onSubmit={handleSubmit}>
+      <Form.Field data-testid='default' name='default' />
+      <Form.Field
+        data-testid='required'
+        required
+        name='required'
+        as={Textarea}
+      />
+      <Form.Field
+        data-testid='autoTextInput'
+        required
+        name='autoTextInput'
+        as={AutoTextInput}
+        defaultOptions={['aaaa', 'ahde']}
+      />
+      <Form.Field name='textInput' as={TextInput} />
+      <button
+        className='mr-4'
+        type='button'
+        data-testid='reset'
+        onClick={() => {
+          methods.reset({
+            default: 'default',
+            autoTextInput: 'aaa',
+            textInput: 'textInput',
+          });
+        }}
+      >
+        reset
+      </button>
+      <button type='submit'>submit</button>
+      <div>{result}</div>
     </Form>
   );
 };
-Basic.play = async ({ canvasElement }) => {
+CompleteForm.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   await userEvent.click(canvas.getByText('reset', { selector: 'button' }));
@@ -96,26 +95,19 @@ export const ManualComposed: Story<FormProps> = args => {
       ),
     []
   );
+  const methods = useForm({ mode: 'onBlur', resolver });
   return (
-    <Form onSubmit={action('form submitted')} resolver={resolver}>
+    <Form {...methods} onSubmit={action('form submitted')}>
+      <Form.Field name='aaa' />
       <Form.Container>
         <Form.Label>manual</Form.Label>
-        <Form.Register name='manual'>
-          <Form.Register.Input />
-          <Form.Register.ErrorCaption />
-        </Form.Register>
+        <Form.Input name='manual' />
       </Form.Container>
       <Form.Container>
         <Form.Label>multiple</Form.Label>
         <div className='flex-1 flex gap-2'>
-          <Form.Register name='multi1'>
-            <Form.Register.Input as={Textarea} />
-            <Form.Register.ErrorCaption />
-          </Form.Register>
-          <Form.Register name='multi2'>
-            <Form.Register.Input as={Textarea} />
-            <Form.Register.ErrorCaption />
-          </Form.Register>
+          <Form.Input name='multi1' />
+          <Form.Input name='multi2' />
         </div>
       </Form.Container>
       <Form.Field label='test' name='test' as={Textarea} />

@@ -1,16 +1,14 @@
 import React from 'react';
 import {
-  useForm,
   useFormContext,
   UseFormMethods,
   FormProvider,
-  Resolver,
   SubmitHandler,
   FieldValues,
-  RegisterOptions,
   Controller,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
+import Label, { LabelProps } from '../Label';
 
 import Textarea from '../Textarea';
 import { PropsOf, AsProps } from '../types';
@@ -18,37 +16,30 @@ import StatusCaption from './StatusCaption';
 
 const DEFAULT_BASE = Textarea;
 
-interface FormRegisterProps extends RegisterOptions {
+interface InputOnlyProps {
   name: string;
-  className?: string;
   required?: boolean;
-  children: React.ReactNode;
+  className?: string;
+  defaultValue?: unknown;
 }
 
-const FormRegisterContext = React.createContext<
-  Omit<FormRegisterProps, 'children'>
->({ name: '' });
+export type InputProps<BaseElement> = AsProps<BaseElement> &
+  Omit<PropsOf<BaseElement>, 'value'> &
+  InputOnlyProps;
 
-const FormRegister = (props: FormRegisterProps) => {
-  const { className, children, ...rest } = props;
-  const { current: value } = React.useRef(rest);
-  return (
-    <FormRegisterContext.Provider value={value}>
-      <div className={twMerge('FormRegister flex-1 [&>*]:w-full', className)}>
-        {children}
-      </div>
-    </FormRegisterContext.Provider>
-  );
-};
-
-export type FieldInputProps<BaseElement> = AsProps<BaseElement> &
-  Omit<PropsOf<BaseElement>, 'value'>;
-
-function FieldInput<
-  BaseElement extends React.ElementType = typeof DEFAULT_BASE
->(props: FieldInputProps<BaseElement>) {
-  const { as, defaultValue, ...rest } = props;
-  const { name, required, ...options } = React.useContext(FormRegisterContext);
+function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
+  props: InputProps<BaseElement>
+) {
+  const {
+    as,
+    name,
+    required,
+    defaultValue,
+    className,
+    onChange,
+    onBlur,
+    ...rest
+  } = props;
 
   const { register } = useFormContext();
 
@@ -69,55 +60,56 @@ function FieldInput<
 
   const component = as || DEFAULT_BASE;
   return (
-    component as typeof component & {
-      registrable?: boolean;
-    }
-  ).registrable ? (
-    React.createElement(component, {
-      ...rest,
-      status: errors[name] ? 'error' : undefined,
-      name,
-      ref: register(rules),
-    })
-  ) : (
-    <Controller
-      name={name}
-      defaultValue={defaultValue}
-      rules={rules}
-      render={({ ...params }) =>
+    <div
+      className={twMerge(
+        'FormRegister [&>*]:w-full grow-[2] shrink basis-40',
+        className
+      )}
+    >
+      {(
+        component as typeof component & {
+          registrable?: boolean;
+        }
+      ).registrable ? (
         React.createElement(component, {
-          status: errors[name] ? 'error' : undefined,
-          defaultValue,
           ...rest,
-          ...params,
+          status: errors[name] ? 'error' : undefined,
+          name,
+          onChange,
+          onBlur,
+          ref: register(rules),
         })
-      }
-    />
+      ) : (
+        <Controller
+          name={name}
+          defaultValue={defaultValue}
+          rules={rules}
+          render={({ onChange: inputChange, onBlur: inputBlur, ...params }) =>
+            React.createElement(component, {
+              status: errors[name] ? 'error' : undefined,
+              defaultValue,
+              onChange: (...p: any[]) => {
+                inputChange(...p);
+                if (onChange) onChange(...p);
+              },
+              onBlur: () => {
+                inputBlur();
+                if (onBlur) onBlur();
+              },
+              ...rest,
+              ...params,
+            })
+          }
+        />
+      )}
+      {errors[name] ? (
+        <StatusCaption status='error' className={twMerge('ErrorCaption')}>
+          {errors[name]?.message || '請輸入必填欄位'}
+        </StatusCaption>
+      ) : null}
+    </div>
   );
 }
-
-const ErrorCaption = ({
-  className,
-  children,
-}: {
-  className?: string;
-  children?: React.ReactNode;
-}) => {
-  const { name } = React.useContext(FormRegisterContext);
-  const { errors } = useFormContext();
-
-  return (
-    <StatusCaption
-      status='error'
-      className={twMerge('ErrorCaption', className)}
-    >
-      {errors[name] ? errors[name]?.message || '請輸入必填欄位' : children}
-    </StatusCaption>
-  );
-};
-
-FormRegister.Input = FieldInput;
-FormRegister.ErrorCaption = ErrorCaption;
 
 const Container = ({
   className,
@@ -126,40 +118,27 @@ const Container = ({
   <div className={twMerge('sm:flex', className)} {...props} />
 );
 
-interface FieldLabelProps {
-  children: React.ReactNode;
-  required?: boolean;
-  sublabel?: string;
-}
+const RequiredIcon = () => (
+  <span className='FieldLabel-require relative'>
+    <div className='absolute inline w-1.5 h-1.5 bg-secondary rounded-full ml-1' />
+  </span>
+);
 
-const FieldLabel = (props: FieldLabelProps) => {
-  const { children, required, sublabel } = props;
+const FieldLabel = ({ className, ...rest }: LabelProps) => (
+  <Label
+    className={twMerge('flex-1 basis-32 sm:max-w-[25%] min-w-[20%]', className)}
+    {...rest}
+  />
+);
 
-  return (
-    <div className='FieldLabel-wrapper'>
-      <div className='FieldLabel whitespace-prewrap break-words w-32 mr-4 text-lg leading-6 pt-2 pb-1 capitalize'>
-        {children}
-        {required && (
-          <span className='FieldLabel-require relative'>
-            <div className='absolute inline w-1.5 h-1.5 bg-secondary rounded-full ml-1' />
-          </span>
-        )}
-      </div>
-      <div className='FieldLabel-sublabel text-xs text-grey-500'>
-        {sublabel}
-      </div>
-    </div>
-  );
-};
-
-interface FieldOnlyProps
-  extends Omit<React.ComponentProps<typeof FieldLabel>, 'children'> {
+interface FieldOnlyProps extends Omit<LabelProps, 'children'> {
   name: string;
   label?: string;
-  caption?: string;
+  required?: boolean;
   onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
 }
+
 export type FieldProps<BaseElement> = AsProps<BaseElement> &
   Omit<PropsOf<BaseElement>, 'value'> &
   FieldOnlyProps;
@@ -167,59 +146,75 @@ export type FieldProps<BaseElement> = AsProps<BaseElement> &
 const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   props: FieldProps<BaseElement>
 ) => {
-  const {
-    name,
-    as,
-    required,
-    onChange,
-    onBlur,
-    label,
-    sublabel,
-    caption,
-    ...rest
-  } = props;
+  const { name, required, label, note, ...rest } = props;
 
   return (
     <Container>
-      <FieldLabel sublabel={sublabel} required={required}>
+      <FieldLabel note={note}>
         {label || name}
+        {required && <RequiredIcon />}
       </FieldLabel>
-      <FormRegister name={name} required={required}>
-        <FormRegister.Input as={as} {...(rest as PropsOf<BaseElement>)} />
-        <FormRegister.ErrorCaption>{caption}</FormRegister.ErrorCaption>
-      </FormRegister>
+      <Input name={name} required={required} {...rest} />
     </Container>
   );
 };
 
-export interface FormProps
-  extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
-  resolver?: Resolver;
-  onError?: any;
-  onSubmit: SubmitHandler<FieldValues>;
-  children: React.ReactNode | ((methods: UseFormMethods) => React.ReactNode);
-}
+export type FormProps = Omit<
+  React.FormHTMLAttributes<HTMLFormElement>,
+  'onSubmit'
+> &
+  UseFormMethods & {
+    onSubmit: SubmitHandler<FieldValues>;
+    children: React.ReactNode | ((methods: UseFormMethods) => React.ReactNode);
+  };
 
 const Form = function Form(props: FormProps) {
-  const { resolver, onSubmit, onError, children } = props;
-  const methods = useForm({
-    mode: 'onBlur',
-    resolver,
-  });
+  const {
+    onSubmit,
+    children,
+    register,
+    unregister,
+    formState,
+    watch,
+    handleSubmit,
+    reset,
+    setError,
+    clearErrors,
+    setValue,
+    getValues,
+    trigger,
+    control,
+    errors,
+    ...rest
+  } = props;
 
   return (
-    <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit, onError)}>
-        {typeof children === 'function' ? children(methods) : children}
+    <FormProvider
+      register={register}
+      unregister={unregister}
+      formState={formState}
+      watch={watch}
+      handleSubmit={handleSubmit}
+      reset={reset}
+      setError={setError}
+      clearErrors={clearErrors}
+      setValue={setValue}
+      getValues={getValues}
+      trigger={trigger}
+      control={control}
+      errors={errors}
+    >
+      <form onSubmit={handleSubmit(onSubmit)} {...rest}>
+        {children}
       </form>
     </FormProvider>
   );
 };
 
 Form.Field = Field;
-Form.Register = FormRegister;
-Form.Container = Container;
 Form.Label = FieldLabel;
+Form.Input = Input;
+Form.Container = Container;
 // ask reserve space for caption(validation text)?
 
 export default Form;
