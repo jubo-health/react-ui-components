@@ -62,7 +62,7 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   return (
     <div
       className={twMerge(
-        'FormRegister [&>*]:w-full grow-[2] shrink basis-40',
+        'form-component [&>*]:w-full grow-[2] shrink basis-40',
         className
       )}
     >
@@ -111,11 +111,11 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   );
 }
 
-const Container = ({
+const GridCell = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={twMerge('sm:flex', className)} {...props} />
+  <div className={twMerge('form-component', className)} {...props} />
 );
 
 const RequiredIcon = () => (
@@ -126,7 +126,7 @@ const RequiredIcon = () => (
 
 const FieldLabel = ({ className, ...rest }: LabelProps) => (
   <Label
-    className={twMerge('flex-1 basis-32 sm:max-w-[25%] min-w-[20%]', className)}
+    className={twMerge('form-component flex-1 basis-32 min-w-[20%]', className)}
     {...rest}
   />
 );
@@ -149,13 +149,13 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   const { name, required, label, note, ...rest } = props;
 
   return (
-    <Container>
+    <>
       <FieldLabel note={note}>
         {label || name}
         {required && <RequiredIcon />}
       </FieldLabel>
       <Input name={name} required={required} {...rest} />
-    </Container>
+    </>
   );
 };
 
@@ -204,7 +204,12 @@ const Form = function Form(props: FormProps) {
       control={control}
       errors={errors}
     >
-      <form onSubmit={handleSubmit(onSubmit)} {...rest}>
+      <form
+        // experimental
+        className='[&>*:not(.form-component)]:col-span-full sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)]'
+        onSubmit={handleSubmit(onSubmit)}
+        {...rest}
+      >
         {children}
       </form>
     </FormProvider>
@@ -214,7 +219,7 @@ const Form = function Form(props: FormProps) {
 Form.Field = Field;
 Form.Label = FieldLabel;
 Form.Input = Input;
-Form.Container = Container;
+Form.GridCell = GridCell; // experimental
 // ask reserve space for caption(validation text)?
 
 export default Form;

@@ -99,17 +99,22 @@ export const ManualComposed: Story<FormProps> = args => {
   return (
     <Form {...methods} onSubmit={action('form submitted')}>
       <Form.Field name='aaa' />
-      <Form.Container>
-        <Form.Label>manual</Form.Label>
-        <Form.Input name='manual' />
-      </Form.Container>
-      <Form.Container>
-        <Form.Label>multiple</Form.Label>
-        <div className='flex-1 flex gap-2'>
-          <Form.Input name='multi1' />
-          <Form.Input name='multi2' />
-        </div>
-      </Form.Container>
+
+      <Form.Label>manual</Form.Label>
+      <Form.Input name='manual' />
+
+      <Form.Label>multiple</Form.Label>
+      <Form.GridCell className='flex gap-2'>
+        <Form.Input name='multi1' />
+        <Form.Input name='multi2' />
+      </Form.GridCell>
+
+      <Form.Label>multiple</Form.Label>
+      <Form.GridCell className='flex gap-2'>
+        <Form.Input name='multi3' />
+        <Form.Input name='multi4' />
+      </Form.GridCell>
+
       <Form.Field label='test' name='test' as={Textarea} />
       <button type='submit'>submit</button>
     </Form>
