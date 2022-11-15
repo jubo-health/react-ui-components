@@ -111,12 +111,15 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   );
 }
 
-const GridCell = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={twMerge('form-component', className)} {...props} />
-);
+const DEFAULT_FRAGMENT = 'div';
+function Fragment<
+  BaseElement extends React.ElementType = typeof DEFAULT_FRAGMENT
+>({ className, as, ...props }: AsProps<BaseElement> & PropsOf<BaseElement>) {
+  return React.createElement(as || DEFAULT_FRAGMENT, {
+    className: twMerge('col-span-full', className),
+    ...props,
+  });
+}
 
 const RequiredIcon = () => (
   <span className='FieldLabel-require relative'>
@@ -206,7 +209,7 @@ const Form = function Form(props: FormProps) {
     >
       <form
         // experimental
-        className='[&>*:not(.form-component)]:col-span-full sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)]'
+        className='sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)]'
         onSubmit={handleSubmit(onSubmit)}
         {...rest}
       >
@@ -219,7 +222,8 @@ const Form = function Form(props: FormProps) {
 Form.Field = Field;
 Form.Label = FieldLabel;
 Form.Input = Input;
-Form.GridCell = GridCell; // experimental
+Form.RequiredIcon = RequiredIcon;
+Form.Fragment = Fragment;
 // ask reserve space for caption(validation text)?
 
 export default Form;

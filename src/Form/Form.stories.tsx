@@ -13,7 +13,6 @@ import TextInput from '../TextInput';
 import Form, { FormProps } from './index';
 import AutoTextInput from '../AutoTextInput';
 import { halt } from '../storyUtils';
-import Label from '../Label';
 
 export default {
   title: 'Form',
@@ -43,22 +42,24 @@ export const CompleteForm: Story<FormProps> = args => {
         defaultOptions={['aaaa', 'ahde']}
       />
       <Form.Field name='textInput' as={TextInput} />
-      <button
-        className='mr-4'
-        type='button'
-        data-testid='reset'
-        onClick={() => {
-          methods.reset({
-            default: 'default',
-            autoTextInput: 'aaa',
-            textInput: 'textInput',
-          });
-        }}
-      >
-        reset
-      </button>
-      <button type='submit'>submit</button>
-      <div>{result}</div>
+      <Form.Fragment>
+        <button
+          className='mr-4'
+          type='button'
+          data-testid='reset'
+          onClick={() => {
+            methods.reset({
+              default: 'default',
+              autoTextInput: 'aaa',
+              textInput: 'textInput',
+            });
+          }}
+        >
+          reset
+        </button>
+        <button type='submit'>submit</button>
+        <div>{result}</div>
+      </Form.Fragment>
     </Form>
   );
 };
@@ -104,19 +105,21 @@ export const ManualComposed: Story<FormProps> = args => {
       <Form.Input name='manual' />
 
       <Form.Label>multiple</Form.Label>
-      <Form.GridCell className='flex gap-2'>
+      <div className='flex gap-2'>
         <Form.Input name='multi1' />
         <Form.Input name='multi2' />
-      </Form.GridCell>
+      </div>
 
       <Form.Label>multiple</Form.Label>
-      <Form.GridCell className='flex gap-2'>
+      <div className='flex gap-2'>
         <Form.Input name='multi3' />
         <Form.Input name='multi4' />
-      </Form.GridCell>
+      </div>
 
       <Form.Field label='test' name='test' as={Textarea} />
-      <button type='submit'>submit</button>
+      <Form.Fragment>
+        <button type='submit'>submit</button>
+      </Form.Fragment>
     </Form>
   );
 };
