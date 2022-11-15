@@ -24,4 +24,5 @@ PlayGround.args = {
   required: true,
   label: 'label',
   note: '已帶入',
+  caption: 'i am caption',
 };

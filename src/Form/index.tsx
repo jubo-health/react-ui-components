@@ -21,6 +21,7 @@ interface InputOnlyProps {
   required?: boolean;
   className?: string;
   defaultValue?: unknown;
+  caption?: string;
 }
 
 export type InputProps<BaseElement> = AsProps<BaseElement> &
@@ -38,6 +39,7 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     className,
     onChange,
     onBlur,
+    caption,
     ...rest
   } = props;
 
@@ -102,9 +104,12 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
           }
         />
       )}
-      {errors[name] ? (
-        <StatusCaption status='error' className={twMerge('ErrorCaption')}>
-          {errors[name]?.message || '請輸入必填欄位'}
+      {errors[name] || caption ? (
+        <StatusCaption
+          status={errors[name] ? 'error' : 'default'}
+          className={twMerge('ErrorCaption')}
+        >
+          {errors[name] ? errors[name]?.message || '請輸入必填欄位' : caption}
         </StatusCaption>
       ) : null}
     </div>
@@ -136,7 +141,15 @@ const FieldLabel = ({ className, ...rest }: LabelProps) => (
 
 interface FieldOnlyProps extends Omit<LabelProps, 'children'> {
   name: string;
-  label?: string;
+  label?: string | React.ReactNode;
+  /**
+   * Label 底下的文字備註
+   */
+  note?: string | React.ReactNode;
+  /**
+   * Input 底下的文字備註，會被驗證覆蓋
+   */
+  caption?: string;
   required?: boolean;
   onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
@@ -149,7 +162,7 @@ export type FieldProps<BaseElement> = AsProps<BaseElement> &
 const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   props: FieldProps<BaseElement>
 ) => {
-  const { name, required, label, note, ...rest } = props;
+  const { name, required, label, note, caption, ...rest } = props;
 
   return (
     <>
@@ -157,7 +170,7 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         {label || name}
         {required && <RequiredIcon />}
       </FieldLabel>
-      <Input name={name} required={required} {...rest} />
+      <Input name={name} required={required} caption={caption} {...rest} />
     </>
   );
 };
