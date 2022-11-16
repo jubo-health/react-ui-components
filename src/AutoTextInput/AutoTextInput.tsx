@@ -211,7 +211,8 @@ const AutoTextInput = React.forwardRef(function AutoTextInputInner<
     item: typeof unifiedOptions[0];
     score?: number;
   }> = React.useMemo(() => {
-    if (!value) return unifiedOptions.map(option => ({ item: option }));
+    if (!value || typeof value !== 'string')
+      return unifiedOptions.map(option => ({ item: option }));
 
     const exact: Array<{ item: typeof unifiedOptions[0] }> = [];
     const notExact: typeof unifiedOptions = [];
