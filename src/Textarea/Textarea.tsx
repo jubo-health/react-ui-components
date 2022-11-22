@@ -40,7 +40,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       widthInCharLength,
       className,
       style,
-      value: propsValue,
+      value,
       onChange,
       defaultValue,
       startAdornment,
@@ -48,10 +48,10 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       ...rest
     } = props;
     const skeleton = React.useRef<HTMLDivElement>(null);
-    const { current: isControlled } = React.useRef(
-      typeof propsValue !== 'undefined'
-    );
-    const [value, setValue] = React.useState(defaultValue ?? '');
+    // const { current: isControlled } = React.useRef(
+    //   typeof propsValue !== 'undefined'
+    // );
+    // const [value, setValue] = React.useState(defaultValue ?? '');
 
     // for the mismatch of scrollbar auto judgements
     // between skeleton and textarea
@@ -72,7 +72,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     const handleChange = React.useCallback(
       e => {
-        setValue(e.currentTarget.value);
+        // setValue(e.currentTarget.value);
         reviseScrollbar();
         if (onChange) onChange(e);
       },
@@ -81,43 +81,47 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     return (
       <InputHolder
-        className='inline-grid h-auto'
+        className='h-auto w-40'
         style={style}
         status={status}
         size={size}
         startAdornment={startAdornment}
         endAdornment={endAdornment}
       >
-        <div
-          className={twMerge(
-            'whitespace-pre-wrap line-clamp-5 break-words invisible',
-            'row-span-full col-span-full leading-6',
-            className
-          )}
-          ref={skeleton}
-        >
-          {/* space is nessesary */}
-          {`${isControlled ? propsValue : value} `}
+        <div className='inline-grid h-auto flex-1'>
+          <div
+            className={twMerge(
+              'whitespace-pre-wrap line-clamp-5 break-words invisible',
+              'row-span-full col-span-full leading-6',
+              className
+            )}
+            ref={skeleton}
+          >
+            {/* space is nessesary */}
+            {/* {`${isControlled ? propsValue : value} `} */}
+            {`${value} `}
+          </div>
+          <textarea
+            ref={ref}
+            className={twMerge(
+              'resize-none outline-none bg-transparent',
+              'row-span-full col-span-full leading-6',
+              showScrollbar ? 'overflow-y-auto' : 'overflow-hidden',
+              className
+            )}
+            style={style}
+            autoComplete='off'
+            autoCorrect='off'
+            autoCapitalize='off'
+            spellCheck='false'
+            tabIndex={0}
+            rows={1}
+            onChange={handleChange}
+            // value={isControlled ? propsValue : value}
+            value={value}
+            {...rest}
+          />
         </div>
-        <textarea
-          ref={ref}
-          className={twMerge(
-            'resize-none outline-none bg-transparent',
-            'row-span-full col-span-full leading-6',
-            showScrollbar ? 'overflow-y-auto' : 'overflow-hidden',
-            className
-          )}
-          style={style}
-          autoComplete='off'
-          autoCorrect='off'
-          autoCapitalize='off'
-          spellCheck='false'
-          tabIndex={0}
-          rows={1}
-          onChange={handleChange}
-          value={isControlled ? propsValue : value}
-          {...rest}
-        />
       </InputHolder>
     );
   }
@@ -128,5 +132,8 @@ type DefaultProps = {
   status: 'default';
 };
 Textarea.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
+const TextareaAssigned = Object.assign(Textarea, {
+  // registrable: true,
+});
 
-export default Textarea;
+export default TextareaAssigned;

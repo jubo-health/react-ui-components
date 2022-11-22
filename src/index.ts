@@ -1,8 +1,9 @@
 /* eslint-disable import/prefer-default-export */
-import Bar from './Bar';
-import NumberInput from './NumberInput';
-import TextInput from './TextInput';
-import Textarea from './Textarea';
-import TransitionScroller from './TransitionScroller';
 
-export { Bar, NumberInput, TextInput, Textarea, TransitionScroller };
+export { default as AutoTextInput } from './AutoTextInput';
+export * from './AutoTextInput';
+export { default as TextInput } from './TextInput';
+export { default as NumberInput } from './NumberInput';
+export { default as Textarea } from './Textarea';
+export { default as Button } from './Button';
+export { default as Label } from './Label';

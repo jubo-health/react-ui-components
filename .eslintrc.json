@@ -44,6 +44,7 @@
     "react/require-default-props": [1],
     "react/prop-types": 0,
     "no-restricted-exports": [0],
+    "no-nested-ternary": [0],
     "indent": "off",
     "@typescript-eslint/indent": "off",
     "object-curly-newline": "off",

@@ -26,6 +26,8 @@ export interface TextInputProps
    * input原生的屬性: size，以字元長度定義的寬度，但現版面多直接給定 rem-base or pixel-base 的寬度所以也不大建議使用
    */
   widthInCharLength?: number;
+  value?: React.InputHTMLAttributes<HTMLInputElement>['value'];
+  onChange?: React.InputHTMLAttributes<HTMLInputElement>['onChange'];
 }
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
@@ -37,21 +39,40 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
       className,
       startAdornment,
       endAdornment,
+      onKeyDown,
+      onCompositionStart,
+      onCompositionEnd,
+      value,
+      onChange,
       ...rest
     } = props;
+    const isComposing = React.useRef(false);
     return (
       <InputHolder
         status={status}
         size={size}
         startAdornment={startAdornment}
         endAdornment={endAdornment}
+        className={className}
       >
         <input
           ref={ref}
-          type='text'
-          className={twMerge('outline-none bg-transparent', className)}
+          className='outline-none bg-transparent flex-1 w-full'
           tabIndex={0}
           size={widthInCharLength}
+          value={value}
+          onChange={onChange}
+          onCompositionStart={e => {
+            isComposing.current = true;
+            if (onCompositionStart) onCompositionStart(e);
+          }}
+          onCompositionEnd={e => {
+            isComposing.current = false;
+            if (onCompositionEnd) onCompositionEnd(e);
+          }}
+          onKeyDown={e => {
+            if (!isComposing.current && onKeyDown) onKeyDown(e);
+          }}
           {...rest}
         />
       </InputHolder>
@@ -64,5 +85,8 @@ type DefaultProps = {
   status: 'default';
 };
 TextInput.defaultProps = { size: 'lg', status: 'default' } as DefaultProps;
+const TextInputAssigned = Object.assign(TextInput, {
+  registrable: true,
+});
 
-export default TextInput;
+export default TextInputAssigned;
