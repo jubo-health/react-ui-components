@@ -5,15 +5,15 @@ import uniqueId from 'lodash/uniqueId';
 import FormButton from '../FormButton';
 import { PropsOf, AsProps, MutuallyExclude } from '../types';
 
-interface MutualStates {
+interface MutualStates<T = string> {
   onChange?: (
-    state: string | number | null,
+    state: T | null,
     event?:
       | React.ChangeEvent<HTMLInputElement>
       | React.MouseEvent<HTMLInputElement>
   ) => void;
   onClick?: React.MouseEventHandler<HTMLInputElement>;
-  value?: string | number | null;
+  value?: T | null;
   name?: string;
 }
 
@@ -51,28 +51,28 @@ interface Option {
   sublabel?: string;
 }
 
-interface RadioProps {
+interface RadioProps<T = string> {
   options: Option[];
   children: React.ReactNode;
   onChange: (
-    state: string | number | null,
+    state: T | null,
     event?:
       | React.ChangeEvent<HTMLInputElement>
       | React.MouseEvent<HTMLInputElement>
   ) => void;
-  value: string | number | null;
+  value: T | null;
   name?: string;
   className?: string;
 }
 const defaultProps = {
   name: uniqueId('radio-'),
 } as RadioProps;
-const Radio = (
+function Radio<T>(
   props: MutuallyExclude<
-    RadioProps & typeof defaultProps,
+    RadioProps<T> & typeof defaultProps,
     'options' | 'children'
   >
-) => {
+) {
   const { options, value, onChange, children, name = '', className } = props;
   const context = React.useMemo(
     () => ({
@@ -98,6 +98,6 @@ const Radio = (
       </div>
     </Context.Provider>
   );
-};
+}
 Radio.Option = RadioOption;
 export default Radio;

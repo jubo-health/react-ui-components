@@ -9,12 +9,8 @@ export default {
 } as Meta;
 
 export const PlayGround: Story<React.ComponentProps<typeof Radio>> = args => {
-  const [optionValue, setOptionValue] = React.useState<string | number | null>(
-    'a'
-  );
-  const [radioValue, setRadioValue] = React.useState<string | number | null>(
-    'v'
-  );
+  const [optionValue, setOptionValue] = React.useState<string | null>('a');
+  const [radioValue, setRadioValue] = React.useState<string | null>('v');
   return (
     <>
       <div>
