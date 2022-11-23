@@ -23,9 +23,11 @@ function RadioOption<
   const { as, value: propsValue, ...rest } = props;
   const { onChange, value, name } = React.useContext(Context);
   return React.createElement(as || DEFAULT_BASE, {
-    type: 'checkbox', // using checkbox to ensure 'unselect' would be triggered
+    // origin type with checkbox to ensure 'unselect' would be triggered
+    type: 'checkbox',
     onChange,
     checked: value === propsValue,
+    color: value && value !== propsValue ? 'secondary' : 'primary',
     value: propsValue,
     name,
     ...rest,

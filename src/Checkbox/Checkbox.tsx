@@ -23,7 +23,6 @@ function CheckboxOption<
   const { as, value: propsValue, ...rest } = props;
   const { onChange, value, name } = React.useContext(Context);
   return React.createElement(as || DEFAULT_BASE, {
-    type: 'checkbox',
     onChange,
     checked: value.includes(propsValue),
     value: propsValue,
