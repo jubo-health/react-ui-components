@@ -6,8 +6,14 @@ import FormButton from '../FormButton';
 import { PropsOf, AsProps, MutuallyExclude } from '../types';
 
 interface MutualStates {
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
-  value?: string | number;
+  onChange?: (
+    state: string | number | null,
+    event?:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.MouseEvent<HTMLInputElement>
+  ) => void;
+  onClick?: React.MouseEventHandler<HTMLInputElement>;
+  value?: string | number | null;
   name?: string;
 }
 
@@ -21,10 +27,17 @@ function RadioOption<
   BaseElement extends React.ElementType = typeof DEFAULT_BASE
 >(props: FieldInputProps<BaseElement>) {
   const { as, value: propsValue, ...rest } = props;
-  const { onChange, value, name } = React.useContext(Context);
+  const { onChange, onClick, value, name } = React.useContext(Context);
+  const handleChange = React.useCallback(
+    e => {
+      if (onChange) onChange(e.target.value, e);
+    },
+    [onChange]
+  );
   return React.createElement(as || DEFAULT_BASE, {
     type: 'radio',
-    onChange,
+    onChange: handleChange,
+    onClick,
     checked: value === propsValue,
     value: propsValue,
     name,
@@ -41,8 +54,13 @@ interface Option {
 interface RadioProps {
   options: Option[];
   children: React.ReactNode;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  value: string | number;
+  onChange: (
+    state: string | number | null,
+    event?:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.MouseEvent<HTMLInputElement>
+  ) => void;
+  value: string | number | null;
   name?: string;
   className?: string;
 }
@@ -55,19 +73,15 @@ const Radio = (
     'options' | 'children'
   >
 ) => {
-  const {
-    options,
-    value,
-    onChange,
-    children,
-    name = '',
-    className,
-    ...rest
-  } = props;
+  const { options, value, onChange, children, name = '', className } = props;
   const context = React.useMemo(
     () => ({
       name,
       onChange,
+      onClick: (e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
+        const v = e.currentTarget.value;
+        if (v === value) onChange(null, e);
+      },
       value,
     }),
     [name, onChange, value]
@@ -77,17 +91,9 @@ const Radio = (
       <div className={twMerge('grid grid-cols-2 gap-2', className)}>
         {children ||
           options?.map(opt => (
-            <FormButton
-              onChange={onChange}
-              type='radio'
-              name={name}
-              value={opt.value}
-              key={opt.value}
-              checked={value === opt.value}
-              {...rest}
-            >
+            <RadioOption value={opt.value} key={opt.value}>
               {opt.label}
-            </FormButton>
+            </RadioOption>
           ))}
       </div>
     </Context.Provider>

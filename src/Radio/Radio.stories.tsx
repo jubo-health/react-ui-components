@@ -9,16 +9,18 @@ export default {
 } as Meta;
 
 export const PlayGround: Story<React.ComponentProps<typeof Radio>> = args => {
-  const [optionValue, setOptionValue] = React.useState('a');
-  const [radioValue, setRadioValue] = React.useState('v');
+  const [optionValue, setOptionValue] = React.useState<string | number | null>(
+    'a'
+  );
+  const [radioValue, setRadioValue] = React.useState<string | number | null>(
+    'v'
+  );
   return (
     <>
       <div>
         <div>Using Options</div>
         <Radio
-          onChange={e => {
-            setOptionValue(e.target.value);
-          }}
+          onChange={setOptionValue}
           value={optionValue}
           options={[
             { value: 'a', label: 'a' },
@@ -29,12 +31,7 @@ export const PlayGround: Story<React.ComponentProps<typeof Radio>> = args => {
 
       <div>
         <div>Using Children</div>
-        <Radio
-          onChange={e => {
-            setRadioValue(e.target.value);
-          }}
-          value={radioValue}
-        >
+        <Radio onChange={setRadioValue} value={radioValue}>
           <Radio.Option value='f'>f</Radio.Option>
           <Radio.Option value='v'>v</Radio.Option>
         </Radio>
