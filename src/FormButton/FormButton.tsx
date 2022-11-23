@@ -33,7 +33,7 @@ const FormButton = React.forwardRef<
         name={name}
         className='peer hidden'
         ref={ref}
-        type='radio'
+        type='checkbox'
         {...rest}
       />
       <CheckIcon className='fill-primary invisible pointer-events-none peer-checked:visible absolute m-2' />
