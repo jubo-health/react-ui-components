@@ -5,15 +5,9 @@ import uniqueId from 'lodash/uniqueId';
 import FormButton from '../FormButton';
 import { PropsOf, AsProps, MutuallyExclude } from '../types';
 
-interface MutualStates<T = string> {
-  onChange?: (
-    state: T | null,
-    event?:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.MouseEvent<HTMLInputElement>
-  ) => void;
-  onClick?: React.MouseEventHandler<HTMLInputElement>;
-  value?: T | null;
+interface MutualStates {
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  value?: string | null;
   name?: string;
 }
 
@@ -27,17 +21,10 @@ function RadioOption<
   BaseElement extends React.ElementType = typeof DEFAULT_BASE
 >(props: FieldInputProps<BaseElement>) {
   const { as, value: propsValue, ...rest } = props;
-  const { onChange, onClick, value, name } = React.useContext(Context);
-  const handleChange = React.useCallback(
-    e => {
-      if (onChange) onChange(e.target.value, e);
-    },
-    [onChange]
-  );
+  const { onChange, value, name } = React.useContext(Context);
   return React.createElement(as || DEFAULT_BASE, {
-    type: 'radio',
-    onChange: handleChange,
-    onClick,
+    type: 'checkbox', // using checkbox to ensure 'unselect' would be triggered
+    onChange,
     checked: value === propsValue,
     value: propsValue,
     name,
@@ -51,25 +38,25 @@ interface Option {
   sublabel?: string;
 }
 
-interface RadioProps<T = string> {
+interface RadioProps {
   options: Option[];
   children: React.ReactNode;
   onChange: (
-    state: T | null,
+    state: string | null,
     event?:
       | React.ChangeEvent<HTMLInputElement>
       | React.MouseEvent<HTMLInputElement>
   ) => void;
-  value: T | null;
+  value: string | null;
   name?: string;
   className?: string;
 }
 const defaultProps = {
   name: uniqueId('radio-'),
 } as RadioProps;
-function Radio<T>(
+function Radio(
   props: MutuallyExclude<
-    RadioProps<T> & typeof defaultProps,
+    RadioProps & typeof defaultProps,
     'options' | 'children'
   >
 ) {
@@ -77,10 +64,9 @@ function Radio<T>(
   const context = React.useMemo(
     () => ({
       name,
-      onChange,
-      onClick: (e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
         const v = e.currentTarget.value;
-        if (v === value) onChange(null, e);
+        onChange(v === value ? null : v, e);
       },
       value,
     }),
