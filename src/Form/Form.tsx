@@ -222,7 +222,7 @@ const Form = function Form(props: FormProps) {
     >
       <form
         // experimental
-        className='sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)]'
+        className='sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)] sm:gap-y-6'
         onSubmit={handleSubmit(onSubmit)}
         {...rest}
       >

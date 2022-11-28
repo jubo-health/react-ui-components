@@ -12,7 +12,9 @@ import Textarea from '../Textarea';
 import TextInput from '../TextInput';
 import Form, { FormProps } from './index';
 import AutoTextInput from '../AutoTextInput';
+import Radio from '../Radio';
 import { halt } from '../storyUtils';
+import Checkbox from '../Checkbox';
 
 export default {
   title: 'Form',
@@ -23,6 +25,7 @@ export const CompleteForm: Story<FormProps> = args => {
   const methods = useForm({ mode: 'onBlur' });
   const [result, setResult] = React.useState('');
   const handleSubmit = (d: any) => {
+    console.log(d);
     setResult(JSON.stringify(d));
   };
   return (
@@ -42,6 +45,32 @@ export const CompleteForm: Story<FormProps> = args => {
         defaultOptions={['aaaa', 'ahde']}
       />
       <Form.Field name='textInput' as={TextInput} />
+      <Form.Field
+        name='radio'
+        required
+        as={Radio}
+        options={[
+          { value: 'radio1', label: 'radio1' },
+          { value: 'radio2', label: 'radio2' },
+          { value: 'radio3', label: 'radio3' },
+          { value: 'radio4', label: 'radio4' },
+        ]}
+      />
+      <Form.Field
+        name='check'
+        as={Checkbox}
+        options={[
+          { value: 'option1', label: 'option1' },
+          { value: 'option2', label: 'option2' },
+          { value: 'option3', label: 'option3' },
+          { value: 'option4', label: 'option4' },
+        ]}
+      >
+        <Checkbox.Option value='option1'>option1</Checkbox.Option>
+        <Checkbox.Option value='option2'>option2</Checkbox.Option>
+        <Checkbox.Option value='option3'>option3</Checkbox.Option>
+        <Checkbox.Option value='option4'>option4</Checkbox.Option>
+      </Form.Field>
       <Form.Fragment>
         <button
           className='mr-4'
@@ -69,18 +98,19 @@ CompleteForm.play = async ({ canvasElement }) => {
   await userEvent.click(canvas.getByText('reset', { selector: 'button' }));
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
   await halt();
-  await expect(canvas.getByText('請輸入必填欄位')).toBeInTheDocument();
+  await expect(canvas.getAllByText('請輸入必填欄位').length).toBe(2);
 
   await expect(canvas.getByDisplayValue('textInput')).toBeInTheDocument();
   await expect(canvas.getByDisplayValue('default')).toBeInTheDocument();
   await expect(canvas.getByDisplayValue('aaa')).toBeInTheDocument();
+  await userEvent.click(canvas.getByDisplayValue('radio1'));
 
   await userEvent.type(canvas.getByTestId('required'), 'required');
 
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
   await expect(
     await canvas.findByText(
-      '{"textInput":"textInput","default":"default","required":"required","autoTextInput":"aaa"}'
+      '{"textInput":"textInput","default":"default","required":"required","autoTextInput":"aaa","radio":"radio1"}'
     )
   ).toBeInTheDocument();
 };

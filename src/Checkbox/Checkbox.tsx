@@ -40,7 +40,7 @@ interface Option {
 interface CheckboxProps {
   options: Option[];
   children: React.ReactNode;
-  onChange: (
+  onChange?: (
     state: string[],
     event?:
       | React.ChangeEvent<HTMLInputElement>
@@ -59,18 +59,26 @@ function Checkbox(
     'options' | 'children'
   >
 ) {
-  const { options, value, onChange, children, name = '', className } = props;
+  const {
+    options,
+    value = [],
+    onChange,
+    children,
+    name = '',
+    className,
+  } = props;
   const context = React.useMemo(
     () => ({
       name,
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
         const index = value.findIndex(v => v === e.target.value);
-        onChange(
-          index > -1
-            ? [...value.slice(0, index), ...value.slice(index + 1)]
-            : [...value, e.target.value],
-          e
-        );
+        if (onChange)
+          onChange(
+            index > -1
+              ? [...value.slice(0, index), ...value.slice(index + 1)]
+              : [...value, e.target.value],
+            e
+          );
       },
       value,
     }),

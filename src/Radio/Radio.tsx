@@ -43,7 +43,7 @@ interface Option {
 interface RadioProps {
   options: Option[];
   children: React.ReactNode;
-  onChange: (
+  onChange?: (
     state: string | null,
     event?:
       | React.ChangeEvent<HTMLInputElement>
@@ -68,7 +68,7 @@ function Radio(
       name,
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
         const v = e.currentTarget.value;
-        onChange(v === value ? null : v, e);
+        if (onChange) onChange(v === value ? null : v, e);
       },
       value,
     }),
@@ -76,7 +76,7 @@ function Radio(
   );
   return (
     <Context.Provider value={context}>
-      <div className={twMerge('grid grid-cols-2 gap-2', className)}>
+      <div className={twMerge('grid grid-cols-2 gap-2 mb-2', className)}>
         {children ||
           options?.map(opt => (
             <RadioOption value={opt.value} key={opt.value}>

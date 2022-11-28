@@ -39,7 +39,7 @@ const FormButton = React.forwardRef<HTMLInputElement, FormButtonProps>(
           className={twMerge(
             'flex select-none rounded-sm w-full h-full',
             'text-lg leading-6 p-1',
-            'text-grey-700 peer-checked:text-primary',
+            'text-grey-900 peer-checked:text-primary',
             color === 'secondary' && 'text-grey-400',
             className
           )}
