@@ -72,7 +72,7 @@ function CheckboxBase<T extends string | string[]>(
   );
   return (
     <Context.Provider value={context}>
-      <div className={twMerge('grid grid-cols-2 gap-2', className)}>
+      <div className={twMerge('grid grid-cols-2 gap-2 mb-2', className)}>
         {children ||
           options?.map(opt => (
             <CheckboxBaseOption value={opt.value} key={opt.value}>
