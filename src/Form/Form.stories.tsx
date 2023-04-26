@@ -7,10 +7,9 @@ import { expect } from '@storybook/jest';
 import { yupResolver } from '@hookform/resolvers';
 import * as yup from 'yup';
 
-import { useForm } from 'react-hook-form';
 import Textarea from '../Textarea';
 import TextInput from '../TextInput';
-import Form, { FormProps } from './index';
+import Form, { FormProps, useForm } from './index';
 import AutoTextInput from '../AutoTextInput';
 import Radio from '../Radio';
 import { halt } from '../storyUtils';
@@ -23,6 +22,7 @@ export default {
 
 export const CompleteForm: Story<FormProps> = args => {
   const methods = useForm({ mode: 'onBlur' });
+  const { reset } = methods;
   const [result, setResult] = React.useState('');
   const handleSubmit = (d: any) => {
     console.log(d);
@@ -87,7 +87,9 @@ export const CompleteForm: Story<FormProps> = args => {
           reset
         </button>
         <button type='submit'>submit</button>
-        <div>{result}</div>
+        <div id='result' data-testid='result'>
+          {result}
+        </div>
       </Form.Fragment>
     </Form>
   );
@@ -108,11 +110,16 @@ CompleteForm.play = async ({ canvasElement }) => {
   await userEvent.type(canvas.getByTestId('required'), 'required');
 
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
+  await halt();
   await expect(
-    await canvas.findByText(
-      '{"textInput":"textInput","default":"default","required":"required","autoTextInput":"aaa","radio":"radio1"}'
-    )
-  ).toBeInTheDocument();
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual({
+    textInput: 'textInput',
+    default: 'default',
+    required: 'required',
+    autoTextInput: 'aaa',
+    radio: 'radio1',
+  });
 };
 
 export const ManualComposed: Story<FormProps> = args => {

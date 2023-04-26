@@ -1,7 +1,9 @@
 import React from 'react';
 import {
+  useForm as useHookForm,
   useFormContext,
   UseFormMethods,
+  UseFormOptions,
   FormProvider,
   SubmitHandler,
   FieldValues,
@@ -151,18 +153,14 @@ interface FieldOnlyProps extends Omit<LabelProps, 'children'> {
    */
   caption?: string;
   required?: boolean;
-  onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
-  onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
 }
 
-export type FieldProps<BaseElement> = AsProps<BaseElement> &
-  Omit<PropsOf<BaseElement>, 'value'> &
-  FieldOnlyProps;
+export type FieldProps<BaseElement> = InputProps<BaseElement> & FieldOnlyProps;
 
 const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   props: FieldProps<BaseElement>
 ) => {
-  const { name, required, label, note, caption, ...rest } = props;
+  const { name, required, label, note } = props;
 
   return (
     <>
@@ -170,7 +168,7 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         {label || name}
         {required && <RequiredIcon />}
       </FieldLabel>
-      <Input name={name} required={required} caption={caption} {...rest} />
+      <Input {...props} />
     </>
   );
 };
@@ -231,6 +229,46 @@ const Form = function Form(props: FormProps) {
     </FormProvider>
   );
 };
+
+interface ExpandedUseFormMethods<T extends FieldValues = FieldValues>
+  extends UseFormMethods<T> {
+  mount: (key: keyof T) => void;
+  unmount: (key: keyof T) => void;
+}
+
+export function useForm<T extends FieldValues = FieldValues>(
+  params: UseFormOptions<T>
+) {
+  const methods = useHookForm<T>({ ...params, shouldUnregister: false });
+  const revisedMethods = React.useRef<null | ExpandedUseFormMethods<T>>(null);
+  const { current: mounted } = React.useRef<Set<keyof T>>(new Set());
+
+  if (!revisedMethods.current) {
+    const handleSubmit: UseFormMethods<T>['handleSubmit'] = (
+      onValid,
+      onInValid
+    ) => {
+      const filteredOnValid: typeof onValid = fieldValues => {
+        const filteredValues = Object.fromEntries(
+          Object.entries(fieldValues).filter(([key]) => mounted.has(key))
+        ) as typeof fieldValues;
+        onValid(filteredValues);
+      };
+      return methods.handleSubmit(filteredOnValid, onInValid);
+    };
+    revisedMethods.current = {
+      ...methods,
+      handleSubmit,
+      mount: (key: keyof T) => {
+        mounted.add(key);
+      },
+      unmount: (key: keyof T) => {
+        mounted.delete(key);
+      },
+    };
+  }
+  return methods;
+}
 
 Form.Field = Field;
 Form.Label = FieldLabel;
