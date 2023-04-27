@@ -2,13 +2,14 @@ import React from 'react';
 import {
   useForm as useHookForm,
   useFormContext as useHookFormContext,
-  UseFormMethods as UseHookFormMethods,
-  UseFormOptions,
+  UseFormReturn as UseHookFormReturn,
+  UseFormProps,
   FormProvider as HookFormProvider,
   FormProviderProps as HookFormProviderProps,
   SubmitHandler,
   FieldValues,
   Controller,
+  useFormState,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
 import Label, { LabelProps } from '../Label';
@@ -25,7 +26,7 @@ interface ExtendedMethods<T> {
 }
 
 interface UseFormMethods<T extends FieldValues = FieldValues>
-  extends UseHookFormMethods<T>,
+  extends UseHookFormReturn<T>,
     ExtendedMethods<T> {}
 
 const useFormContext = useHookFormContext as <
@@ -68,7 +69,8 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     ...rest
   } = props;
 
-  const { register, errors, mount, unmount } = useFormContext();
+  const { register, mount, unmount } = useFormContext();
+  const { errors } = useFormState();
 
   React.useEffect(() => {
     mount(name);
@@ -107,17 +109,16 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         React.createElement(component, {
           ...rest,
           status: errors[name] ? 'error' : undefined,
-          name,
-          onChange,
-          onBlur,
-          ref: register(rules),
+          ...register(name, rules),
         })
       ) : (
         <Controller
           name={name}
           defaultValue={defaultValue}
           rules={rules}
-          render={({ onChange: inputChange, onBlur: inputBlur, ...params }) =>
+          render={({
+            field: { value, onChange: inputChange, onBlur: inputBlur },
+          }) =>
             React.createElement(component, {
               status: errors[name] ? 'error' : undefined,
               defaultValue,
@@ -130,7 +131,7 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
                 if (onBlur) onBlur();
               },
               ...rest,
-              ...params,
+              value,
             })
           }
         />
@@ -210,46 +211,50 @@ export type FormProps = Omit<
     onSubmit: SubmitHandler<FieldValues>;
     children:
       | React.ReactNode
-      | ((methods: UseHookFormMethods) => React.ReactNode);
+      | ((methods: UseHookFormReturn) => React.ReactNode);
   };
 
 const Form = function Form(props: FormProps) {
   const {
-    onSubmit,
-    children,
-    register,
-    unregister,
-    formState,
     watch,
-    handleSubmit,
-    reset,
+    getValues,
+    getFieldState,
     setError,
     clearErrors,
     setValue,
-    getValues,
     trigger,
+    formState,
+    resetField,
+    reset,
+    handleSubmit,
+    unregister,
     control,
-    errors,
+    register,
+    setFocus,
     mount,
     unmount,
+    onSubmit,
+    children,
     ...rest
   } = props;
 
   return (
     <FormProvider
-      register={register}
-      unregister={unregister}
-      formState={formState}
       watch={watch}
-      handleSubmit={handleSubmit}
-      reset={reset}
+      getValues={getValues}
+      getFieldState={getFieldState}
       setError={setError}
       clearErrors={clearErrors}
       setValue={setValue}
-      getValues={getValues}
       trigger={trigger}
+      formState={formState}
+      resetField={resetField}
+      reset={reset}
+      handleSubmit={handleSubmit}
+      unregister={unregister}
       control={control}
-      errors={errors}
+      register={register}
+      setFocus={setFocus}
       mount={mount}
       unmount={unmount}
     >
@@ -266,14 +271,17 @@ const Form = function Form(props: FormProps) {
 };
 
 function useForm<T extends FieldValues = FieldValues>(
-  params: Omit<UseFormOptions<T>, 'shouldUnregister'>
+  params: Omit<UseFormProps<T>, 'shouldUnregister'>
 ) {
   const methods = useHookForm<T>({ ...params, shouldUnregister: false });
-  const revisedMethods = React.useRef<null | UseFormMethods<T>>(null);
+  const revisedMethods = React.useRef<null | Pick<
+    UseFormMethods<T>,
+    'handleSubmit' | 'mount' | 'unmount'
+  >>(null);
   const { current: mounted } = React.useRef<Set<keyof T>>(new Set());
 
   if (!revisedMethods.current) {
-    const handleSubmit: UseHookFormMethods<T>['handleSubmit'] = (
+    const handleSubmit: UseHookFormReturn<T>['handleSubmit'] = (
       onValid,
       onInValid
     ) => {
@@ -286,7 +294,6 @@ function useForm<T extends FieldValues = FieldValues>(
       return methods.handleSubmit(filteredOnValid, onInValid);
     };
     revisedMethods.current = {
-      ...methods,
       handleSubmit,
       mount: (key: keyof T) => {
         mounted.add(key);
@@ -297,7 +304,7 @@ function useForm<T extends FieldValues = FieldValues>(
     };
   }
 
-  return { ...revisedMethods.current, errors: methods.errors };
+  return { ...methods, ...revisedMethods.current };
 }
 
 Form.Field = Field;
