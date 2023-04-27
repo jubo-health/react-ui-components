@@ -1,10 +1,11 @@
 import React from 'react';
 import {
   useForm as useHookForm,
-  useFormContext,
-  UseFormMethods,
+  useFormContext as useHookFormContext,
+  UseFormMethods as UseHookFormMethods,
   UseFormOptions,
-  FormProvider,
+  FormProvider as HookFormProvider,
+  FormProviderProps as HookFormProviderProps,
   SubmitHandler,
   FieldValues,
   Controller,
@@ -17,6 +18,28 @@ import { PropsOf, AsProps } from '../types';
 import StatusCaption from './StatusCaption';
 
 const DEFAULT_BASE = Textarea;
+
+interface ExtendedMethods<T> {
+  mount: (key: keyof T) => void;
+  unmount: (key: keyof T) => void;
+}
+
+interface UseFormMethods<T extends FieldValues = FieldValues>
+  extends UseHookFormMethods<T>,
+    ExtendedMethods<T> {}
+
+const useFormContext = useHookFormContext as <
+  TFieldValues extends Record<string, any>
+>() => UseFormMethods<TFieldValues>;
+
+type FormProviderProps<T extends FieldValues> = HookFormProviderProps<T> &
+  ExtendedMethods<T>;
+const FormProvider = HookFormProvider as <
+  TFieldValues extends Record<string, any>
+>({
+  children,
+  ...props
+}: FormProviderProps<TFieldValues>) => JSX.Element;
 
 interface InputOnlyProps {
   name: string;
@@ -45,7 +68,14 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     ...rest
   } = props;
 
-  const { register } = useFormContext();
+  const { register, errors, mount, unmount } = useFormContext();
+
+  React.useEffect(() => {
+    mount(name);
+    return () => {
+      unmount(name);
+    };
+  }, [mount, name, unmount]);
 
   // the callback return "true" indicate valid
   const rules = React.useMemo(
@@ -60,7 +90,6 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     }),
     [required]
   );
-  const { errors } = useFormContext();
 
   const component = as || DEFAULT_BASE;
   return (
@@ -179,7 +208,9 @@ export type FormProps = Omit<
 > &
   UseFormMethods & {
     onSubmit: SubmitHandler<FieldValues>;
-    children: React.ReactNode | ((methods: UseFormMethods) => React.ReactNode);
+    children:
+      | React.ReactNode
+      | ((methods: UseHookFormMethods) => React.ReactNode);
   };
 
 const Form = function Form(props: FormProps) {
@@ -199,6 +230,8 @@ const Form = function Form(props: FormProps) {
     trigger,
     control,
     errors,
+    mount,
+    unmount,
     ...rest
   } = props;
 
@@ -217,6 +250,8 @@ const Form = function Form(props: FormProps) {
       trigger={trigger}
       control={control}
       errors={errors}
+      mount={mount}
+      unmount={unmount}
     >
       <form
         // experimental
@@ -230,21 +265,15 @@ const Form = function Form(props: FormProps) {
   );
 };
 
-interface ExpandedUseFormMethods<T extends FieldValues = FieldValues>
-  extends UseFormMethods<T> {
-  mount: (key: keyof T) => void;
-  unmount: (key: keyof T) => void;
-}
-
-export function useForm<T extends FieldValues = FieldValues>(
-  params: UseFormOptions<T>
+function useForm<T extends FieldValues = FieldValues>(
+  params: Omit<UseFormOptions<T>, 'shouldUnregister'>
 ) {
   const methods = useHookForm<T>({ ...params, shouldUnregister: false });
-  const revisedMethods = React.useRef<null | ExpandedUseFormMethods<T>>(null);
+  const revisedMethods = React.useRef<null | UseFormMethods<T>>(null);
   const { current: mounted } = React.useRef<Set<keyof T>>(new Set());
 
   if (!revisedMethods.current) {
-    const handleSubmit: UseFormMethods<T>['handleSubmit'] = (
+    const handleSubmit: UseHookFormMethods<T>['handleSubmit'] = (
       onValid,
       onInValid
     ) => {
@@ -267,7 +296,8 @@ export function useForm<T extends FieldValues = FieldValues>(
       },
     };
   }
-  return methods;
+
+  return { ...revisedMethods.current, errors: methods.errors };
 }
 
 Form.Field = Field;
@@ -277,4 +307,12 @@ Form.RequiredIcon = RequiredIcon;
 Form.Fragment = Fragment;
 // ask reserve space for caption(validation text)?
 
+export * from 'react-hook-form';
+export {
+  type UseFormMethods,
+  type FormProviderProps,
+  FormProvider,
+  useFormContext,
+  useForm,
+};
 export default Form;

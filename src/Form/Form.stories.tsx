@@ -22,12 +22,12 @@ export default {
 
 export const CompleteForm: Story<FormProps> = args => {
   const methods = useForm({ mode: 'onBlur' });
-  const { reset } = methods;
   const [result, setResult] = React.useState('');
   const handleSubmit = (d: any) => {
     console.log(d);
     setResult(JSON.stringify(d));
   };
+  const [show, setShow] = React.useState(true);
   return (
     <Form {...methods} onSubmit={handleSubmit}>
       <Form.Field data-testid='default' name='default' />
@@ -73,6 +73,18 @@ export const CompleteForm: Story<FormProps> = args => {
       </Form.Field>
       <Form.Fragment>
         <button
+          type='button'
+          onClick={() => {
+            setShow(prev => !prev);
+          }}
+        >
+          show
+        </button>
+      </Form.Fragment>
+      {show && <Form.Field data-testid='maybeHidden' name='maybeHidden' />}
+
+      <Form.Fragment>
+        <button
           className='mr-4'
           type='button'
           data-testid='reset'
@@ -81,6 +93,7 @@ export const CompleteForm: Story<FormProps> = args => {
               default: 'default',
               autoTextInput: 'aaa',
               textInput: 'textInput',
+              maybeHidden: 'true',
             });
           }}
         >
@@ -109,6 +122,20 @@ CompleteForm.play = async ({ canvasElement }) => {
 
   await userEvent.type(canvas.getByTestId('required'), 'required');
 
+  await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
+  await halt();
+  await expect(
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual({
+    textInput: 'textInput',
+    default: 'default',
+    required: 'required',
+    autoTextInput: 'aaa',
+    radio: 'radio1',
+    maybeHidden: 'true',
+  });
+
+  await userEvent.click(canvas.getByText('show', { selector: 'button' }));
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
   await halt();
   await expect(

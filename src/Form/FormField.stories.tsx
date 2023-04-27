@@ -1,8 +1,7 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 
-import { useForm } from 'react-hook-form';
-import Form from './index';
+import Form, { useForm } from './index';
 
 export default {
   title: 'Form.Label',
