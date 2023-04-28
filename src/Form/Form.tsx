@@ -1,3 +1,7 @@
+// !!!!! using register would lead to the web stuck when submmitting with setState
+// !!!!! I have not figure out the root cause which cannot be reproduce in codesandbox (https://codesandbox.io/s/react-hook-form-get-started-forked-ohvrve?file=/src/index.js)
+// !!!!! so avoid using register in this version
+
 import React from 'react';
 import {
   useForm as useHookForm,
@@ -69,7 +73,7 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     ...rest
   } = props;
 
-  const { register, mount, unmount } = useFormContext();
+  const { mount, unmount } = useFormContext();
   const { errors } = useFormState();
 
   React.useEffect(() => {
@@ -101,41 +105,29 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         className
       )}
     >
-      {(
-        component as typeof component & {
-          registrable?: boolean;
+      <Controller
+        name={name}
+        defaultValue={defaultValue}
+        rules={rules}
+        render={({
+          field: { value, onChange: inputChange, onBlur: inputBlur },
+        }) =>
+          React.createElement(component, {
+            status: errors[name] ? 'error' : undefined,
+            defaultValue,
+            onChange: (...p: any[]) => {
+              inputChange(...p);
+              if (onChange) onChange(...p);
+            },
+            onBlur: () => {
+              inputBlur();
+              if (onBlur) onBlur();
+            },
+            ...rest,
+            value,
+          })
         }
-      ).registrable ? (
-        React.createElement(component, {
-          ...rest,
-          status: errors[name] ? 'error' : undefined,
-          ...register(name, rules),
-        })
-      ) : (
-        <Controller
-          name={name}
-          defaultValue={defaultValue}
-          rules={rules}
-          render={({
-            field: { value, onChange: inputChange, onBlur: inputBlur },
-          }) =>
-            React.createElement(component, {
-              status: errors[name] ? 'error' : undefined,
-              defaultValue,
-              onChange: (...p: any[]) => {
-                inputChange(...p);
-                if (onChange) onChange(...p);
-              },
-              onBlur: () => {
-                inputBlur();
-                if (onBlur) onBlur();
-              },
-              ...rest,
-              value,
-            })
-          }
-        />
-      )}
+      />
       {errors[name] || caption ? (
         <StatusCaption
           status={errors[name] ? 'error' : 'default'}
@@ -273,7 +265,11 @@ const Form = function Form(props: FormProps) {
 function useForm<T extends FieldValues = FieldValues>(
   params: Omit<UseFormProps<T>, 'shouldUnregister'>
 ) {
-  const methods = useHookForm<T>({ ...params, shouldUnregister: false });
+  // using register may lead to some bug, so I remove it. Detail showed in the top of this file.
+  const { register, ...methods } = useHookForm<T>({
+    ...params,
+    shouldUnregister: false,
+  });
   const revisedMethods = React.useRef<null | Pick<
     UseFormMethods<T>,
     'handleSubmit' | 'mount' | 'unmount'
