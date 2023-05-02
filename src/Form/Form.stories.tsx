@@ -100,6 +100,32 @@ export const CompleteForm: Story<FormProps> = args => {
           reset
         </button>
         <button type='submit'>submit</button>
+        <button
+          type='button'
+          onClick={() => {
+            setResult(JSON.stringify(methods.getValues()));
+          }}
+        >
+          getAllValues
+        </button>
+        <button
+          type='button'
+          onClick={() => {
+            setResult(JSON.stringify(methods.getValues('maybeHidden')));
+          }}
+        >
+          getTheValues
+        </button>
+        <button
+          type='button'
+          onClick={() => {
+            setResult(
+              JSON.stringify(methods.getValues(['maybeHidden', 'textInput']))
+            );
+          }}
+        >
+          getSomeValues
+        </button>
         <div id='result' data-testid='result'>
           {result}
         </div>
@@ -135,6 +161,33 @@ CompleteForm.play = async ({ canvasElement }) => {
     maybeHidden: 'true',
   });
 
+  await userEvent.click(
+    canvas.getByText('getAllValues', { selector: 'button' })
+  );
+  await expect(
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual({
+    textInput: 'textInput',
+    default: 'default',
+    required: 'required',
+    autoTextInput: 'aaa',
+    radio: 'radio1',
+    maybeHidden: 'true',
+  });
+
+  await userEvent.click(
+    canvas.getByText('getTheValues', { selector: 'button' })
+  );
+  await expect((await canvas.getByTestId('result')).textContent).toBe('"true"');
+
+  await userEvent.click(
+    canvas.getByText('getSomeValues', { selector: 'button' })
+  );
+  await expect(
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual(['true', 'textInput']);
+
+  // hide
   await userEvent.click(canvas.getByText('show', { selector: 'button' }));
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
   await halt();
@@ -147,6 +200,34 @@ CompleteForm.play = async ({ canvasElement }) => {
     autoTextInput: 'aaa',
     radio: 'radio1',
   });
+
+  await userEvent.click(
+    canvas.getByText('getAllValues', { selector: 'button' })
+  );
+  await expect(
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual({
+    textInput: 'textInput',
+    default: 'default',
+    required: 'required',
+    autoTextInput: 'aaa',
+    radio: 'radio1',
+  });
+
+  await userEvent.click(
+    canvas.getByText('getTheValues', { selector: 'button' })
+  );
+  await expect(
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual({});
+
+  await userEvent.click(
+    canvas.getByText('getSomeValues', { selector: 'button' })
+  );
+
+  await expect(
+    JSON.parse((await canvas.getByTestId('result')).textContent || '{}')
+  ).toEqual([null, 'textInput']); // JSON.stringify tranlate [, 'a'] as [null, 'a']
 };
 
 export const ManualComposed: Story<FormProps> = args => {

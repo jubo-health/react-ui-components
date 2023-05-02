@@ -14,8 +14,14 @@ import {
   FieldValues,
   Controller,
   useFormState,
+  UseFormGetValues,
+  FieldPath,
+  FieldPathValue,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
+import get from 'lodash/get';
+import set from 'lodash/set';
+
 import Label, { LabelProps } from '../Label';
 
 import Textarea from '../Textarea';
@@ -24,22 +30,25 @@ import StatusCaption from './StatusCaption';
 
 const DEFAULT_BASE = Textarea;
 
-interface ExtendedMethods<T> {
-  mount: (key: keyof T) => void;
-  unmount: (key: keyof T) => void;
+interface ExtendedMethods<T extends FieldValues> {
+  mount: (key: FieldPath<T>) => void;
+  unmount: (key: FieldPath<T>) => void;
 }
 
 interface UseFormMethods<T extends FieldValues = FieldValues>
-  extends UseHookFormReturn<T>,
+  extends Omit<UseHookFormReturn<T>, 'register' | 'watch'>,
     ExtendedMethods<T> {}
 
-const useFormContext = useHookFormContext as <
+const useFormContext = useHookFormContext as unknown as <
   TFieldValues extends Record<string, any>
 >() => UseFormMethods<TFieldValues>;
 
-type FormProviderProps<T extends FieldValues> = HookFormProviderProps<T> &
+type FormProviderProps<T extends FieldValues> = Omit<
+  HookFormProviderProps<T>,
+  'register' | 'watch'
+> &
   ExtendedMethods<T>;
-const FormProvider = HookFormProvider as <
+const FormProvider = HookFormProvider as unknown as <
   TFieldValues extends Record<string, any>
 >({
   children,
@@ -208,7 +217,6 @@ export type FormProps = Omit<
 
 const Form = function Form(props: FormProps) {
   const {
-    watch,
     getValues,
     getFieldState,
     setError,
@@ -221,7 +229,6 @@ const Form = function Form(props: FormProps) {
     handleSubmit,
     unregister,
     control,
-    register,
     setFocus,
     mount,
     unmount,
@@ -232,7 +239,6 @@ const Form = function Form(props: FormProps) {
 
   return (
     <FormProvider
-      watch={watch}
       getValues={getValues}
       getFieldState={getFieldState}
       setError={setError}
@@ -245,7 +251,6 @@ const Form = function Form(props: FormProps) {
       handleSubmit={handleSubmit}
       unregister={unregister}
       control={control}
-      register={register}
       setFocus={setFocus}
       mount={mount}
       unmount={unmount}
@@ -262,39 +267,64 @@ const Form = function Form(props: FormProps) {
   );
 };
 
-function useForm<T extends FieldValues = FieldValues>(
-  params: Omit<UseFormProps<T>, 'shouldUnregister'>
+function filterMounted<
+  FieldValues extends Record<string, any>,
+  P extends FieldPath<FieldValues>
+>(mounted: Set<P>, fieldValues: FieldValues) {
+  const filteredValues = {};
+  mounted.forEach(key => set(filteredValues, key, get(fieldValues, key)));
+  return filteredValues as FieldPathValue<FieldValues, P>;
+}
+
+function useForm<TFieldValues extends FieldValues = FieldValues>(
+  params: Omit<UseFormProps<TFieldValues>, 'shouldUnregister'>
 ) {
   // using register may lead to some bug, so I remove it. Detail showed in the top of this file.
-  const { register, ...methods } = useHookForm<T>({
+  // also remove watch for better performance and maintainance. Use useWatch instead.
+  const { register, watch, ...methods } = useHookForm<TFieldValues>({
     ...params,
     shouldUnregister: false,
   });
   const revisedMethods = React.useRef<null | Pick<
-    UseFormMethods<T>,
-    'handleSubmit' | 'mount' | 'unmount'
+    UseFormMethods<TFieldValues>,
+    'handleSubmit' | 'getValues' | 'mount' | 'unmount'
   >>(null);
-  const { current: mounted } = React.useRef<Set<keyof T>>(new Set());
+  const { current: mounted } = React.useRef<Set<FieldPath<TFieldValues>>>(
+    new Set()
+  );
 
   if (!revisedMethods.current) {
-    const handleSubmit: UseHookFormReturn<T>['handleSubmit'] = (
+    const handleSubmit: UseHookFormReturn<TFieldValues>['handleSubmit'] = (
       onValid,
       onInValid
     ) => {
       const filteredOnValid: typeof onValid = fieldValues => {
-        const filteredValues = Object.fromEntries(
-          Object.entries(fieldValues).filter(([key]) => mounted.has(key))
-        ) as typeof fieldValues;
-        onValid(filteredValues);
+        // FIXME: useFieldArray
+        const filteredValues = filterMounted(mounted, fieldValues);
+        onValid(filteredValues as typeof fieldValues);
       };
       return methods.handleSubmit(filteredOnValid, onInValid);
     };
+    const getValues: UseFormGetValues<TFieldValues> = (
+      names?: FieldPath<TFieldValues> | ReadonlyArray<FieldPath<TFieldValues>>
+    ) => {
+      if (typeof names === 'undefined')
+        return filterMounted(mounted, methods.getValues());
+
+      if (typeof names === 'string')
+        return mounted.has(names) ? methods.getValues(names) : undefined;
+
+      return methods
+        .getValues(names)
+        .map((v, i) => (mounted.has(names[i]) ? v : undefined)) as any;
+    };
     revisedMethods.current = {
       handleSubmit,
-      mount: (key: keyof T) => {
+      getValues,
+      mount: (key: FieldPath<TFieldValues>) => {
         mounted.add(key);
       },
-      unmount: (key: keyof T) => {
+      unmount: (key: FieldPath<TFieldValues>) => {
         mounted.delete(key);
       },
     };
@@ -316,6 +346,7 @@ export {
   type FormProviderProps,
   FormProvider,
   useFormContext,
+  // useWatch,
   useForm,
 };
 export default Form;
