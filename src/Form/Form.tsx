@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 // !!!!! using register would lead to the web stuck when submmitting with setState
 // !!!!! I have not figure out the root cause which cannot be reproduce in codesandbox (https://codesandbox.io/s/react-hook-form-get-started-forked-ohvrve?file=/src/index.js)
 // !!!!! so avoid using register in this version
@@ -13,6 +14,7 @@ import {
   SubmitHandler,
   FieldValues,
   Controller,
+  useWatch as useHookFormWatch,
   useFormState,
   UseFormGetValues,
   FieldPath,
@@ -267,13 +269,26 @@ const Form = function Form(props: FormProps) {
   );
 };
 
-function filterMounted<
+function reviseByMounted<
   FieldValues extends Record<string, any>,
   P extends FieldPath<FieldValues>
->(mounted: Set<P>, fieldValues: FieldValues) {
-  const filteredValues = {};
-  mounted.forEach(key => set(filteredValues, key, get(fieldValues, key)));
-  return filteredValues as FieldPathValue<FieldValues, P>;
+>(
+  data: Record<string, any> | any[],
+  mounted: Set<P>,
+  names?: FieldPath<FieldValues> | readonly FieldPath<FieldValues>[]
+) {
+  if (typeof names === 'undefined') {
+    const filteredValues = {};
+    mounted.forEach(key => set(filteredValues, key, get(data, key)));
+    return filteredValues as FieldPathValue<FieldValues, P>;
+  }
+
+  if (typeof names === 'string')
+    return mounted.has(names as any) ? data : undefined;
+
+  return data.map((v: any, i: number) =>
+    mounted.has(names[i] as any) ? v : undefined
+  ) as any;
 }
 
 function useForm<TFieldValues extends FieldValues = FieldValues>(
@@ -289,18 +304,20 @@ function useForm<TFieldValues extends FieldValues = FieldValues>(
     UseFormMethods<TFieldValues>,
     'handleSubmit' | 'getValues' | 'mount' | 'unmount'
   >>(null);
-  const { current: mounted } = React.useRef<Set<FieldPath<TFieldValues>>>(
-    new Set()
-  );
 
   if (!revisedMethods.current) {
+    methods.control._mounted = new Set();
+    methods.control._watching = [];
     const handleSubmit: UseHookFormReturn<TFieldValues>['handleSubmit'] = (
       onValid,
       onInValid
     ) => {
       const filteredOnValid: typeof onValid = fieldValues => {
         // FIXME: useFieldArray
-        const filteredValues = filterMounted(mounted, fieldValues);
+        const filteredValues = reviseByMounted(
+          fieldValues,
+          methods.control._mounted
+        );
         onValid(filteredValues as typeof fieldValues);
       };
       return methods.handleSubmit(filteredOnValid, onInValid);
@@ -308,29 +325,52 @@ function useForm<TFieldValues extends FieldValues = FieldValues>(
     const getValues: UseFormGetValues<TFieldValues> = (
       names?: FieldPath<TFieldValues> | ReadonlyArray<FieldPath<TFieldValues>>
     ) => {
-      if (typeof names === 'undefined')
-        return filterMounted(mounted, methods.getValues());
-
-      if (typeof names === 'string')
-        return mounted.has(names) ? methods.getValues(names) : undefined;
-
-      return methods
-        .getValues(names)
-        .map((v, i) => (mounted.has(names[i]) ? v : undefined)) as any;
+      return reviseByMounted(
+        methods.getValues(names as any),
+        methods.control._mounted,
+        names
+      );
     };
     revisedMethods.current = {
       handleSubmit,
       getValues,
       mount: (key: FieldPath<TFieldValues>) => {
-        mounted.add(key);
+        methods.control._mounted.add(key);
+        methods.control._mounted = new Set(methods.control._mounted); // intend to trigger re-calculation in useWatch
       },
       unmount: (key: FieldPath<TFieldValues>) => {
-        mounted.delete(key);
+        methods.control._mounted.delete(key);
+        methods.control._mounted = new Set(methods.control._mounted); // intend to trigger re-calculation in useWatch
       },
     };
   }
 
   return { ...methods, ...revisedMethods.current };
+}
+
+function useWatch(props?: any) {
+  const { current: name } = React.useRef(props?.name);
+  const [, setRenderCounts] = React.useState(0);
+  const methods = useFormContext();
+  const result = useHookFormWatch(props);
+  const { control = methods.control } = props || {};
+
+  React.useEffect(() => {
+    const trigger = () => {
+      setRenderCounts(prev => prev + 1);
+    };
+    control._watching.push({ trigger });
+    return () => {
+      control._watching = control._watching.filter(
+        (obj: any) => obj.trigger !== trigger
+      );
+    };
+  }, [control, name]);
+
+  return React.useMemo(
+    () => reviseByMounted(result, control._mounted, name),
+    [control._mounted, name, result]
+  );
 }
 
 Form.Field = Field;
@@ -346,7 +386,7 @@ export {
   type FormProviderProps,
   FormProvider,
   useFormContext,
-  // useWatch,
+  useWatch,
   useForm,
 };
 export default Form;

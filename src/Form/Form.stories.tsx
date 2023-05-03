@@ -9,7 +9,7 @@ import * as yup from 'yup';
 
 import Textarea from '../Textarea';
 import TextInput from '../TextInput';
-import Form, { FormProps, useForm } from './index';
+import Form, { FormProps, useForm, useWatch } from './index';
 import AutoTextInput from '../AutoTextInput';
 import Radio from '../Radio';
 import { halt } from '../storyUtils';
@@ -28,6 +28,15 @@ export const CompleteForm: Story<FormProps> = args => {
     setResult(JSON.stringify(d));
   };
   const [show, setShow] = React.useState(true);
+
+  const { control } = methods;
+  const watchAll = useWatch({ control });
+  const watchOne = useWatch({ name: 'maybeHidden', control });
+  const watchMultiple = useWatch({
+    name: ['maybeHidden', 'textInput'],
+    control,
+  });
+  console.log('watchAll', watchAll, watchOne, watchMultiple);
   return (
     <Form {...methods} onSubmit={handleSubmit}>
       <Form.Field data-testid='default' name='default' />
@@ -85,7 +94,7 @@ export const CompleteForm: Story<FormProps> = args => {
 
       <Form.Fragment>
         <button
-          className='mr-4'
+          className='border rounded p-2'
           type='button'
           data-testid='reset'
           onClick={() => {
@@ -99,8 +108,11 @@ export const CompleteForm: Story<FormProps> = args => {
         >
           reset
         </button>
-        <button type='submit'>submit</button>
+        <button className='border rounded p-2' type='submit'>
+          submit
+        </button>
         <button
+          className='border rounded p-2'
           type='button'
           onClick={() => {
             setResult(JSON.stringify(methods.getValues()));
@@ -109,6 +121,7 @@ export const CompleteForm: Story<FormProps> = args => {
           getAllValues
         </button>
         <button
+          className='border rounded p-2'
           type='button'
           onClick={() => {
             setResult(JSON.stringify(methods.getValues('maybeHidden')));
@@ -117,6 +130,7 @@ export const CompleteForm: Story<FormProps> = args => {
           getTheValues
         </button>
         <button
+          className='border rounded p-2'
           type='button'
           onClick={() => {
             setResult(
@@ -128,6 +142,15 @@ export const CompleteForm: Story<FormProps> = args => {
         </button>
         <div id='result' data-testid='result'>
           {result}
+        </div>
+        <div id='watchAll' data-testid='watchAll'>
+          {JSON.stringify(watchAll)}
+        </div>
+        <div id='watchOne' data-testid='watchOne'>
+          {JSON.stringify(watchOne)}
+        </div>
+        <div id='watchMultiple' data-testid='watchMultiple'>
+          {JSON.stringify(watchMultiple)}
         </div>
       </Form.Fragment>
     </Form>
@@ -148,6 +171,7 @@ CompleteForm.play = async ({ canvasElement }) => {
 
   await userEvent.type(canvas.getByTestId('required'), 'required');
 
+  // show
   await userEvent.click(canvas.getByText('submit', { selector: 'button' }));
   await halt();
   await expect(
@@ -160,6 +184,20 @@ CompleteForm.play = async ({ canvasElement }) => {
     radio: 'radio1',
     maybeHidden: 'true',
   });
+  await expect(
+    JSON.parse((await canvas.getByTestId('watchAll')).textContent || '{}')
+  ).toEqual({
+    textInput: 'textInput',
+    default: 'default',
+    required: 'required',
+    autoTextInput: 'aaa',
+    radio: 'radio1',
+    maybeHidden: 'true',
+  });
+  await expect(await canvas.getByTestId('watchOne').textContent).toBe('"true"');
+  await expect(
+    JSON.parse((await canvas.getByTestId('watchMultiple')).textContent || '{}')
+  ).toEqual(['true', 'textInput']);
 
   await userEvent.click(
     canvas.getByText('getAllValues', { selector: 'button' })
@@ -200,6 +238,19 @@ CompleteForm.play = async ({ canvasElement }) => {
     autoTextInput: 'aaa',
     radio: 'radio1',
   });
+  await expect(
+    JSON.parse((await canvas.getByTestId('watchAll')).textContent || '{}')
+  ).toEqual({
+    textInput: 'textInput',
+    default: 'default',
+    required: 'required',
+    autoTextInput: 'aaa',
+    radio: 'radio1',
+  });
+  await expect(await canvas.getByTestId('watchOne').textContent).toBe('');
+  await expect(
+    JSON.parse((await canvas.getByTestId('watchMultiple')).textContent || '{}')
+  ).toEqual([null, 'textInput']);
 
   await userEvent.click(
     canvas.getByText('getAllValues', { selector: 'button' })
