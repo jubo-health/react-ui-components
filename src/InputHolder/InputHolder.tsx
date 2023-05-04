@@ -39,6 +39,7 @@ const InputHolder = React.forwardRef<HTMLDivElement, InputHolderProps>(
       <div
         className={twMerge(
           'inline-flex relative after:border-b after:border-b-grey-400 after:absolute after:bottom-0 after:inset-x-0',
+          // 'bg-grey-100',
           'hover:after:border-b-2',
           'focus-within:after:border-b-2',
           status === 'warning' && 'focus-within:after:border-b-warning',

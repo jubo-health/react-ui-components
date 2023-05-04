@@ -7,3 +7,12 @@ export type PropsOf<BasicElement = 'div'> =
 export type AsProps<BasicElement> = {
   as?: BasicElement;
 };
+
+/**
+ * let E conflict to each other
+ */
+export type MutuallyExclude<T, E extends keyof T> = {
+  [K in E]: { [P in K]: T[P] } & {
+    [P in Exclude<E, K>]?: never;
+  } & Omit<T, E>;
+}[E];

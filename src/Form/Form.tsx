@@ -1,13 +1,30 @@
+/* eslint-disable no-underscore-dangle */
+// !!!!! using register would lead to the web stuck when submmitting with setState
+// !!!!! I have not figure out the root cause which cannot be reproduce in codesandbox (https://codesandbox.io/s/react-hook-form-get-started-forked-ohvrve?file=/src/index.js)
+// !!!!! so avoid using register in this version
+
 import React from 'react';
 import {
-  useFormContext,
-  UseFormMethods,
-  FormProvider,
+  useForm as useHookForm,
+  useFormContext as useHookFormContext,
+  UseFormReturn as UseHookFormReturn,
+  UseFormProps,
+  FormProvider as HookFormProvider,
+  FormProviderProps as HookFormProviderProps,
   SubmitHandler,
   FieldValues,
   Controller,
+  useWatch as useHookFormWatch,
+  useFormState,
+  UseFormGetValues,
+  FieldPath,
+  FieldPathValue,
+  Control as HookFormControl,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
+import get from 'lodash/get';
+import set from 'lodash/set';
+
 import Label, { LabelProps } from '../Label';
 
 import Textarea from '../Textarea';
@@ -15,6 +32,41 @@ import { PropsOf, AsProps } from '../types';
 import StatusCaption from './StatusCaption';
 
 const DEFAULT_BASE = Textarea;
+
+interface ExtendedMethods<T extends FieldValues> {
+  mount: (key: FieldPath<T>) => void;
+  unmount: (key: FieldPath<T>) => void;
+}
+
+interface UseFormMethods<T extends FieldValues = FieldValues>
+  extends Omit<UseHookFormReturn<T>, 'register' | 'watch'>,
+    ExtendedMethods<T> {
+  control: Control<T>;
+}
+
+interface Control<TFieldValues extends Record<string, any>>
+  extends HookFormControl<TFieldValues> {
+  _watching: Array<{ trigger: (k: string) => void }>;
+  _mounted: Set<any>;
+}
+
+const useFormContext = useHookFormContext as unknown as <
+  TFieldValues extends Record<string, any>
+>() => UseFormMethods<TFieldValues> & {
+  control: Control<TFieldValues>;
+};
+
+type FormProviderProps<T extends FieldValues> = Omit<
+  HookFormProviderProps<T>,
+  'register' | 'watch'
+> &
+  ExtendedMethods<T>;
+const FormProvider = HookFormProvider as unknown as <
+  TFieldValues extends Record<string, any>
+>({
+  children,
+  ...props
+}: FormProviderProps<TFieldValues>) => JSX.Element;
 
 interface InputOnlyProps {
   name: string;
@@ -43,7 +95,17 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     ...rest
   } = props;
 
-  const { register } = useFormContext();
+  const { mount, unmount, control } = useFormContext();
+  const { errors } = useFormState();
+
+  React.useEffect(() => {
+    mount(name);
+    control._watching.forEach((d: any) => d.trigger(name));
+    return () => {
+      unmount(name);
+      control._watching.forEach((d: any) => d.trigger(name));
+    };
+  }, [mount, name, unmount, control]);
 
   // the callback return "true" indicate valid
   const rules = React.useMemo(
@@ -58,7 +120,6 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     }),
     [required]
   );
-  const { errors } = useFormContext();
 
   const component = as || DEFAULT_BASE;
   return (
@@ -68,42 +129,29 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         className
       )}
     >
-      {(
-        component as typeof component & {
-          registrable?: boolean;
+      <Controller
+        name={name}
+        defaultValue={defaultValue}
+        rules={rules}
+        render={({
+          field: { value, onChange: inputChange, onBlur: inputBlur },
+        }) =>
+          React.createElement(component, {
+            status: errors[name] ? 'error' : undefined,
+            defaultValue,
+            onChange: (...p: any[]) => {
+              inputChange(...p);
+              if (onChange) onChange(...p);
+            },
+            onBlur: () => {
+              inputBlur();
+              if (onBlur) onBlur();
+            },
+            ...rest,
+            value,
+          })
         }
-      ).registrable ? (
-        React.createElement(component, {
-          ...rest,
-          status: errors[name] ? 'error' : undefined,
-          name,
-          onChange,
-          onBlur,
-          ref: register(rules),
-        })
-      ) : (
-        <Controller
-          name={name}
-          defaultValue={defaultValue}
-          rules={rules}
-          render={({ onChange: inputChange, onBlur: inputBlur, ...params }) =>
-            React.createElement(component, {
-              status: errors[name] ? 'error' : undefined,
-              defaultValue,
-              onChange: (...p: any[]) => {
-                inputChange(...p);
-                if (onChange) onChange(...p);
-              },
-              onBlur: () => {
-                inputBlur();
-                if (onBlur) onBlur();
-              },
-              ...rest,
-              ...params,
-            })
-          }
-        />
-      )}
+      />
       {errors[name] || caption ? (
         <StatusCaption
           status={errors[name] ? 'error' : 'default'}
@@ -151,18 +199,14 @@ interface FieldOnlyProps extends Omit<LabelProps, 'children'> {
    */
   caption?: string;
   required?: boolean;
-  onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
-  onBlur?: (e: React.FormEvent<HTMLInputElement>) => void;
 }
 
-export type FieldProps<BaseElement> = AsProps<BaseElement> &
-  Omit<PropsOf<BaseElement>, 'value'> &
-  FieldOnlyProps;
+export type FieldProps<BaseElement> = InputProps<BaseElement> & FieldOnlyProps;
 
 const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
   props: FieldProps<BaseElement>
 ) => {
-  const { name, required, label, note, caption, ...rest } = props;
+  const { name, required, label, note } = props;
 
   return (
     <>
@@ -170,7 +214,7 @@ const Field = <BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
         {label || name}
         {required && <RequiredIcon />}
       </FieldLabel>
-      <Input name={name} required={required} caption={caption} {...rest} />
+      <Input {...props} />
     </>
   );
 };
@@ -181,48 +225,54 @@ export type FormProps = Omit<
 > &
   UseFormMethods & {
     onSubmit: SubmitHandler<FieldValues>;
-    children: React.ReactNode | ((methods: UseFormMethods) => React.ReactNode);
+    children:
+      | React.ReactNode
+      | ((methods: UseHookFormReturn) => React.ReactNode);
   };
 
 const Form = function Form(props: FormProps) {
   const {
-    onSubmit,
-    children,
-    register,
-    unregister,
-    formState,
-    watch,
-    handleSubmit,
-    reset,
+    getValues,
+    getFieldState,
     setError,
     clearErrors,
     setValue,
-    getValues,
     trigger,
+    formState,
+    resetField,
+    reset,
+    handleSubmit,
+    unregister,
     control,
-    errors,
+    setFocus,
+    mount,
+    unmount,
+    onSubmit,
+    children,
     ...rest
   } = props;
 
   return (
     <FormProvider
-      register={register}
-      unregister={unregister}
-      formState={formState}
-      watch={watch}
-      handleSubmit={handleSubmit}
-      reset={reset}
+      getValues={getValues}
+      getFieldState={getFieldState}
       setError={setError}
       clearErrors={clearErrors}
       setValue={setValue}
-      getValues={getValues}
       trigger={trigger}
+      formState={formState}
+      resetField={resetField}
+      reset={reset}
+      handleSubmit={handleSubmit}
+      unregister={unregister}
       control={control}
-      errors={errors}
+      setFocus={setFocus}
+      mount={mount}
+      unmount={unmount}
     >
       <form
         // experimental
-        className='sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)]'
+        className='sm:grid sm:grid-cols-[minmax(20%,_auto)_minmax(35%,_1fr)] sm:gap-y-6'
         onSubmit={handleSubmit(onSubmit)}
         {...rest}
       >
@@ -232,6 +282,116 @@ const Form = function Form(props: FormProps) {
   );
 };
 
+function reviseByMounted<
+  FieldValues extends Record<string, any>,
+  P extends FieldPath<FieldValues>
+>(
+  data: Record<string, any> | any[],
+  mounted: Set<P>,
+  names?: FieldPath<FieldValues> | readonly FieldPath<FieldValues>[]
+) {
+  if (typeof names === 'undefined') {
+    const filteredValues = {};
+    mounted.forEach(key => set(filteredValues, key, get(data, key)));
+    return filteredValues as FieldPathValue<FieldValues, P>;
+  }
+
+  if (typeof names === 'string')
+    return mounted.has(names as any) ? data : undefined;
+
+  return data.map((v: any, i: number) =>
+    mounted.has(names[i] as any) ? v : undefined
+  ) as any;
+}
+
+function useForm<TFieldValues extends FieldValues = FieldValues>(
+  params: Omit<UseFormProps<TFieldValues>, 'shouldUnregister'>
+) {
+  // using register may lead to some bug, so I remove it. Detail showed in the top of this file.
+  // also remove watch for better performance and maintainance. Use useWatch instead.
+  const { register, watch, ...methods } = useHookForm<TFieldValues>({
+    ...params,
+    shouldUnregister: false,
+  });
+  const revisedMethods = React.useRef<null | Pick<
+    UseFormMethods<TFieldValues>,
+    'handleSubmit' | 'getValues' | 'mount' | 'unmount'
+  >>(null);
+
+  if (!revisedMethods.current) {
+    const control = methods.control as Control<TFieldValues>;
+    control._mounted = new Set();
+    control._watching = [];
+    const handleSubmit: UseHookFormReturn<TFieldValues>['handleSubmit'] = (
+      onValid,
+      onInValid
+    ) => {
+      const filteredOnValid: typeof onValid = fieldValues => {
+        // FIXME: useFieldArray
+        const filteredValues = reviseByMounted(fieldValues, control._mounted);
+        onValid(filteredValues as typeof fieldValues);
+      };
+      return methods.handleSubmit(filteredOnValid, onInValid);
+    };
+    const getValues: UseFormGetValues<TFieldValues> = (
+      names?: FieldPath<TFieldValues> | ReadonlyArray<FieldPath<TFieldValues>>
+    ) => {
+      return reviseByMounted(
+        methods.getValues(names as any),
+        control._mounted,
+        names
+      );
+    };
+    revisedMethods.current = {
+      handleSubmit,
+      getValues,
+      mount: (key: FieldPath<TFieldValues>) => {
+        control._mounted.add(key);
+        control._mounted = new Set(control._mounted); // intend to trigger re-calculation in useWatch
+      },
+      unmount: (key: FieldPath<TFieldValues>) => {
+        control._mounted.delete(key);
+        control._mounted = new Set(control._mounted); // intend to trigger re-calculation in useWatch
+      },
+    };
+  }
+
+  return {
+    ...methods,
+    ...revisedMethods.current,
+  } as UseFormMethods<TFieldValues>;
+}
+
+function useWatch(props?: any) {
+  const { current: name } = React.useRef(props?.name);
+  const [, setRenderCounts] = React.useState(0);
+  const methods = useFormContext();
+  const result = useHookFormWatch(props);
+  const { control = methods.control } = props || {};
+
+  React.useEffect(() => {
+    const trigger = (updatingName: string) => {
+      if (
+        !name ||
+        name === updatingName ||
+        (Array.isArray(name) && name.includes(updatingName))
+      )
+        setRenderCounts(prev => prev + 1);
+    };
+    control._watching.push({ trigger });
+    return () => {
+      control._watching = control._watching.filter(
+        (obj: any) => obj.trigger !== trigger
+      );
+    };
+  }, [control, name]);
+
+  return React.useMemo(
+    () => reviseByMounted(result, control._mounted, name),
+    [control._mounted, name, result]
+  );
+}
+
 Form.Field = Field;
 Form.Label = FieldLabel;
 Form.Input = Input;
@@ -239,4 +399,13 @@ Form.RequiredIcon = RequiredIcon;
 Form.Fragment = Fragment;
 // ask reserve space for caption(validation text)?
 
+export * from 'react-hook-form';
+export {
+  type UseFormMethods,
+  type FormProviderProps,
+  FormProvider,
+  useFormContext,
+  useWatch,
+  useForm,
+};
 export default Form;
