@@ -19,6 +19,7 @@ import {
   UseFormGetValues,
   FieldPath,
   FieldPathValue,
+  Control as HookFormControl,
 } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
 import get from 'lodash/get';
@@ -39,11 +40,21 @@ interface ExtendedMethods<T extends FieldValues> {
 
 interface UseFormMethods<T extends FieldValues = FieldValues>
   extends Omit<UseHookFormReturn<T>, 'register' | 'watch'>,
-    ExtendedMethods<T> {}
+    ExtendedMethods<T> {
+  control: Control<T>;
+}
+
+interface Control<TFieldValues extends Record<string, any>>
+  extends HookFormControl<TFieldValues> {
+  _watching: Array<{ trigger: (k: string) => void }>;
+  _mounted: Set<any>;
+}
 
 const useFormContext = useHookFormContext as unknown as <
   TFieldValues extends Record<string, any>
->() => UseFormMethods<TFieldValues>;
+>() => UseFormMethods<TFieldValues> & {
+  control: Control<TFieldValues>;
+};
 
 type FormProviderProps<T extends FieldValues> = Omit<
   HookFormProviderProps<T>,
@@ -84,15 +95,17 @@ function Input<BaseElement extends React.ElementType = typeof DEFAULT_BASE>(
     ...rest
   } = props;
 
-  const { mount, unmount } = useFormContext();
+  const { mount, unmount, control } = useFormContext();
   const { errors } = useFormState();
 
   React.useEffect(() => {
     mount(name);
+    control._watching.forEach((d: any) => d.trigger(name));
     return () => {
       unmount(name);
+      control._watching.forEach((d: any) => d.trigger(name));
     };
-  }, [mount, name, unmount]);
+  }, [mount, name, unmount, control]);
 
   // the callback return "true" indicate valid
   const rules = React.useMemo(
@@ -306,18 +319,16 @@ function useForm<TFieldValues extends FieldValues = FieldValues>(
   >>(null);
 
   if (!revisedMethods.current) {
-    methods.control._mounted = new Set();
-    methods.control._watching = [];
+    const control = methods.control as Control<TFieldValues>;
+    control._mounted = new Set();
+    control._watching = [];
     const handleSubmit: UseHookFormReturn<TFieldValues>['handleSubmit'] = (
       onValid,
       onInValid
     ) => {
       const filteredOnValid: typeof onValid = fieldValues => {
         // FIXME: useFieldArray
-        const filteredValues = reviseByMounted(
-          fieldValues,
-          methods.control._mounted
-        );
+        const filteredValues = reviseByMounted(fieldValues, control._mounted);
         onValid(filteredValues as typeof fieldValues);
       };
       return methods.handleSubmit(filteredOnValid, onInValid);
@@ -327,7 +338,7 @@ function useForm<TFieldValues extends FieldValues = FieldValues>(
     ) => {
       return reviseByMounted(
         methods.getValues(names as any),
-        methods.control._mounted,
+        control._mounted,
         names
       );
     };
@@ -335,17 +346,20 @@ function useForm<TFieldValues extends FieldValues = FieldValues>(
       handleSubmit,
       getValues,
       mount: (key: FieldPath<TFieldValues>) => {
-        methods.control._mounted.add(key);
-        methods.control._mounted = new Set(methods.control._mounted); // intend to trigger re-calculation in useWatch
+        control._mounted.add(key);
+        control._mounted = new Set(control._mounted); // intend to trigger re-calculation in useWatch
       },
       unmount: (key: FieldPath<TFieldValues>) => {
-        methods.control._mounted.delete(key);
-        methods.control._mounted = new Set(methods.control._mounted); // intend to trigger re-calculation in useWatch
+        control._mounted.delete(key);
+        control._mounted = new Set(control._mounted); // intend to trigger re-calculation in useWatch
       },
     };
   }
 
-  return { ...methods, ...revisedMethods.current };
+  return {
+    ...methods,
+    ...revisedMethods.current,
+  } as UseFormMethods<TFieldValues>;
 }
 
 function useWatch(props?: any) {
@@ -356,8 +370,13 @@ function useWatch(props?: any) {
   const { control = methods.control } = props || {};
 
   React.useEffect(() => {
-    const trigger = () => {
-      setRenderCounts(prev => prev + 1);
+    const trigger = (updatingName: string) => {
+      if (
+        !name ||
+        name === updatingName ||
+        (Array.isArray(name) && name.includes(updatingName))
+      )
+        setRenderCounts(prev => prev + 1);
     };
     control._watching.push({ trigger });
     return () => {

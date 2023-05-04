@@ -4,7 +4,7 @@ import { action } from '@storybook/addon-actions';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-import { yupResolver } from '@hookform/resolvers';
+import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
 import Textarea from '../Textarea';
@@ -20,6 +20,19 @@ export default {
   component: Form,
 } as Meta;
 
+const Watch = React.memo((props: { id: string; name?: string | string[] }) => {
+  const { current: name } = React.useRef(props.name);
+  const values = useWatch({ name });
+  return (
+    <div className='flex'>
+      <div>watching {name}</div>
+      <div id={props.id} data-testid={props.id}>
+        {JSON.stringify(values)}
+      </div>
+    </div>
+  );
+});
+
 export const CompleteForm: Story<FormProps> = args => {
   const methods = useForm({ mode: 'onBlur' });
   const [result, setResult] = React.useState('');
@@ -29,14 +42,6 @@ export const CompleteForm: Story<FormProps> = args => {
   };
   const [show, setShow] = React.useState(true);
 
-  const { control } = methods;
-  const watchAll = useWatch({ control });
-  const watchOne = useWatch({ name: 'maybeHidden', control });
-  const watchMultiple = useWatch({
-    name: ['maybeHidden', 'textInput'],
-    control,
-  });
-  console.log('watchAll', watchAll, watchOne, watchMultiple);
   return (
     <Form {...methods} onSubmit={handleSubmit}>
       <Form.Field data-testid='default' name='default' />
@@ -143,15 +148,9 @@ export const CompleteForm: Story<FormProps> = args => {
         <div id='result' data-testid='result'>
           {result}
         </div>
-        <div id='watchAll' data-testid='watchAll'>
-          {JSON.stringify(watchAll)}
-        </div>
-        <div id='watchOne' data-testid='watchOne'>
-          {JSON.stringify(watchOne)}
-        </div>
-        <div id='watchMultiple' data-testid='watchMultiple'>
-          {JSON.stringify(watchMultiple)}
-        </div>
+        <Watch id='watchAll' />
+        <Watch id='watchOne' name='maybeHidden' />
+        <Watch id='watchMultiple' name={['maybeHidden', 'textInput']} />
       </Form.Fragment>
     </Form>
   );
